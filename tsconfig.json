@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false
+  },
+  "include": [],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/database" },
+    { "path": "./packages/github" },
+    { "path": "./apps/api" },
+    { "path": "./apps/worker" }
+  ]
+}
+
