@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '@devpilot/database';
 import {
@@ -61,8 +62,14 @@ export class AuthController {
       const state = req.query.state as string | undefined;
       const savedState = req.cookies?.[OAUTH_STATE_COOKIE_NAME];
 
-      // Security check: Validate state to prevent CSRF
-      if (!code || !state || !savedState || state !== savedState) {
+      // Security check: Validate state to prevent CSRF using timing-safe comparison
+      const isValidState =
+        Boolean(state) &&
+        Boolean(savedState) &&
+        state!.length === savedState!.length &&
+        crypto.timingSafeEqual(Buffer.from(state!), Buffer.from(savedState!));
+
+      if (!code || !isValidState) {
         res.clearCookie(OAUTH_STATE_COOKIE_NAME);
         sendError(
           res,

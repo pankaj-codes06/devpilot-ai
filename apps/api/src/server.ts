@@ -7,6 +7,7 @@ import { env } from './config/env.js';
 import healthRoutes from './routes/health.routes.js';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './middleware/error-handler.js';
+import { standardRateLimiter } from './middleware/rate-limiter.js';
 import { prisma } from '@devpilot/database';
 
 export function createApp() {
@@ -55,6 +56,9 @@ export function createApp() {
 
   // Health endpoint
   app.use('/health', healthRoutes);
+
+  // Apply rate limiter to /api
+  app.use('/api', standardRateLimiter);
 
   // Primary API router
   app.use('/api', apiRoutes);

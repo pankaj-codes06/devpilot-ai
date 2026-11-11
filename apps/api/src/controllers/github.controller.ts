@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 import {
   INSTALL_STATE_COOKIE_NAME,
@@ -57,10 +58,16 @@ export class GitHubController {
 
     res.clearCookie(INSTALL_STATE_COOKIE_NAME);
 
-    // Optional state verification if state was provided
-    if (state && savedState && state !== savedState) {
-      sendError(res, 'INVALID_STATE', 'Installation state mismatch', 400);
-      return;
+    // Optional state verification if state was provided (timing-safe)
+    if (state && savedState) {
+      const isMatch =
+        state.length === savedState.length &&
+        crypto.timingSafeEqual(Buffer.from(state), Buffer.from(savedState));
+
+      if (!isMatch) {
+        sendError(res, 'INVALID_STATE', 'Installation state mismatch', 400);
+        return;
+      }
     }
 
     // Redirect user back to repositories dashboard page with installation status

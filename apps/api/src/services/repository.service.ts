@@ -7,6 +7,7 @@ import type {
 } from '@devpilot/shared';
 import { githubIntegrationService } from './github.service.js';
 import { AuditService } from './audit.service.js';
+import { AppError } from '../utils/response.js';
 
 export class RepositoryService {
   /**
@@ -25,8 +26,10 @@ export class RepositoryService {
     const target = accessibleRepos.find((r) => r.id === githubRepoId);
 
     if (!target) {
-      throw new Error(
-        `Repository ${githubRepoId} is not accessible under GitHub App installation ${installationId}`
+      throw new AppError(
+        `Repository ${githubRepoId} is not accessible under GitHub App installation ${installationId}`,
+        403,
+        'FORBIDDEN'
       );
     }
 
@@ -125,7 +128,7 @@ export class RepositoryService {
     });
 
     if (!repository) {
-      throw new Error('Repository not found in current organization');
+      throw new AppError('Repository not found in current organization', 404, 'NOT_FOUND');
     }
 
     await prisma.repository.update({
@@ -188,7 +191,7 @@ export class RepositoryService {
     });
 
     if (!repo) {
-      throw new Error('Repository not found');
+      throw new AppError('Repository not found', 404, 'NOT_FOUND');
     }
 
     return this.mapRepositoryToDto(repo);
@@ -208,7 +211,15 @@ export class RepositoryService {
     });
 
     if (!repo) {
-      throw new Error('Repository not found in current organization');
+      throw new AppError('Repository not found in current organization', 404, 'NOT_FOUND');
+    }
+
+    if (!repo.isConnected && input.isEnabled) {
+      throw new AppError(
+        'Cannot enable autonomous agent on a disconnected repository. Please reconnect the repository first.',
+        400,
+        'BAD_REQUEST'
+      );
     }
 
     const settings = await prisma.agentSettings.upsert({
