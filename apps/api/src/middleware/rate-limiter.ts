@@ -79,3 +79,4 @@ export const authRateLimiter = createRateLimiter({
   max: 30,
   message: 'Too many authentication attempts. Please try again after 15 minutes.',
 });
+
