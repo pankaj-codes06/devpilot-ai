@@ -98,4 +98,24 @@ export const mapModuleSchema = z.object({
   isShared: z.boolean().default(false),
 });
 
+export const updateTeamSchema = z.object({
+  name: z.string().min(2, 'Team name must be at least 2 characters').max(50).optional(),
+  description: z.string().max(300).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex code')
+    .optional(),
+  leadName: z.string().max(100).optional(),
+  leadEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+});
+
+export const updateModuleSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  pathPattern: z.string().min(1, 'Path pattern is required').optional(),
+  teamId: z.string().nullable().optional(),
+  description: z.string().max(300).optional(),
+  isShared: z.boolean().optional(),
+});
+
+
 

@@ -33,6 +33,10 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().default('http://localhost:3000'),
   DEFAULT_TIMEZONE: z.string().default('Asia/Kolkata'),
   STORAGE_DIR: z.string().default('./data/storage'),
+
+  // LLM Providers (Optional - falls back to heuristic static engine if omitted)
+  GEMINI_API_KEY: z.string().optional().default(''),
+  OPENAI_API_KEY: z.string().optional().default(''),
 });
 
 export const env = envSchema.parse(process.env);

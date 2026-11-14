@@ -13,6 +13,7 @@
   "dependencies": {
     "@devpilot/database": "*",
     "@devpilot/github": "*",
+    "@devpilot/intelligence": "*",
     "@devpilot/shared": "*",
     "@google/generative-ai": "^0.21.0",
     "bullmq": "^5.8.3",
