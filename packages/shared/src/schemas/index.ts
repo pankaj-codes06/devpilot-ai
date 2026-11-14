@@ -73,4 +73,29 @@ export const codebaseAnalysisOutputSchema = z.object({
 export type PrioritizedTaskInput = z.infer<typeof prioritizedTaskSchema>;
 export type CodebaseAnalysisOutput = z.infer<typeof codebaseAnalysisOutputSchema>;
 
+export const createProjectSchema = z.object({
+  name: z.string().min(2, 'Project name must be at least 2 characters').max(100),
+  description: z.string().max(500).optional(),
+  repositoryId: z.string().optional(),
+});
+
+export const createTeamSchema = z.object({
+  name: z.string().min(2, 'Team name must be at least 2 characters').max(50),
+  description: z.string().max(300).optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Color must be a valid hex code')
+    .default('#3b82f6'),
+  leadName: z.string().max(100).optional(),
+  leadEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+});
+
+export const mapModuleSchema = z.object({
+  name: z.string().min(2).max(100),
+  pathPattern: z.string().min(1, 'Path pattern is required'),
+  teamId: z.string().nullable().optional(),
+  description: z.string().max(300).optional(),
+  isShared: z.boolean().default(false),
+});
+
 

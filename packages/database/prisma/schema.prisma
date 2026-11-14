@@ -70,6 +70,8 @@ model Organization {
 
   members      TeamMember[]
   repositories Repository[]
+  projects     Project[]
+  teams        Team[]
   auditLogs    AuditLog[]
 
   @@index([slug])
@@ -120,6 +122,8 @@ model Repository {
   agentRuns      AgentRun[]
   pullRequests   PullRequest[]
   commitRecords  CommitRecord[]
+  projects       Project[]
+  githubSyncs    GitHubSync[]
   auditLogs      AuditLog[]
 
   @@index([organizationId])
@@ -273,6 +277,7 @@ model AuditLog {
   organizationId String
   userId         String?
   repositoryId   String?
+  projectId      String?
   action         String
   entityType     String
   entityId       String?
@@ -284,12 +289,272 @@ model AuditLog {
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   user           User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
   repository     Repository?  @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  project        Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([organizationId])
   @@index([userId])
   @@index([repositoryId])
+  @@index([projectId])
   @@index([action])
   @@index([createdAt])
   @@map("audit_logs")
+}
+
+// ==============================================================================
+// Hybrid ZIP + GitHub Autonomous Architecture Models
+// ==============================================================================
+
+enum ProjectSourceType {
+  ZIP
+  GITHUB
+  HYBRID
+}
+
+enum VersionStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum TaskPriorityLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ArtifactType {
+  PROJECT_ZIP
+  TEAM_ZIP
+  DIFF_PATCH
+  REPORT_MD
+  LOG
+}
+
+enum GitHubSyncStatus {
+  PENDING
+  IN_PROGRESS
+  SUCCESS
+  FAILED
+}
+
+model Project {
+  id              String            @id @default(cuid())
+  organizationId  String
+  name            String
+  slug            String
+  description     String?
+  sourceType      ProjectSourceType @default(ZIP)
+  repositoryId    String?
+  activeVersionId String?
+  storagePath     String            @default("")
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  organization    Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  repository      Repository?       @relation(fields: [repositoryId], references: [id], onDelete: SetNull)
+  versions        ProjectVersion[]
+  teams           Team[]
+  modules         ProjectModule[]
+  tasks           DevelopmentTask[]
+  dailyExecutions DailyExecution[]
+  artifacts       Artifact[]
+  githubSyncs     GitHubSync[]
+  auditLogs       AuditLog[]
+
+  @@unique([organizationId, slug])
+  @@index([organizationId])
+  @@index([repositoryId])
+  @@map("projects")
+}
+
+model ProjectVersion {
+  id              String           @id @default(cuid())
+  projectId       String
+  versionNumber   Int
+  label           String
+  status          VersionStatus    @default(PROCESSING)
+  originalZipPath String?
+  extractedPath   String
+  checksum        String
+  fileCount       Int              @default(0)
+  totalBytes      BigInt           @default(0)
+  metadata        Json?
+  changelog       String?
+  errorLog        String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  artifacts       Artifact[]
+  dailyExecutions DailyExecution[]
+  tasks           DevelopmentTask[]
+
+  @@unique([projectId, versionNumber])
+  @@index([projectId])
+  @@index([status])
+  @@map("project_versions")
+}
+
+model Team {
+  id             String            @id @default(cuid())
+  organizationId String
+  projectId      String
+  name           String
+  slug           String
+  description    String?
+  color          String?           @default("#3b82f6")
+  leadName       String?
+  leadEmail      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organization   Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  modules        ProjectModule[]
+  tasks          DevelopmentTask[]
+  artifacts      Artifact[]
+
+  @@unique([projectId, slug])
+  @@index([organizationId])
+  @@index([projectId])
+  @@map("teams")
+}
+
+model ProjectModule {
+  id          String            @id @default(cuid())
+  projectId   String
+  teamId      String?
+  name        String
+  description String?
+  pathPattern String
+  isShared    Boolean           @default(false)
+  suggestedBy String?           @default("AI")
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  team        Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  tasks       DevelopmentTask[]
+
+  @@index([projectId])
+  @@index([teamId])
+  @@map("project_modules")
+}
+
+model DevelopmentTask {
+  id                  String            @id @default(cuid())
+  projectId           String
+  projectVersionId    String?
+  moduleId            String?
+  teamId              String?
+  dailyExecutionId    String?
+  title               String
+  description         String
+  status              TaskStatus        @default(PENDING)
+  priority            TaskPriorityLevel @default(MEDIUM)
+  category            String            @default("FEATURE")
+  estimatedComplexity String            @default("M")
+  expectedBenefit     String?
+  suggestedApproach   String?
+  requiredTests       String?
+  relevantFiles       String[]          @default([])
+  evidence            String?
+  order               Int               @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  project             Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectVersion      ProjectVersion?   @relation(fields: [projectVersionId], references: [id], onDelete: SetNull)
+  module              ProjectModule?    @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+  team                Team?             @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  dailyExecution      DailyExecution?   @relation(fields: [dailyExecutionId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([status])
+  @@index([priority])
+  @@index([teamId])
+  @@map("development_tasks")
+}
+
+model DailyExecution {
+  id               String           @id @default(cuid())
+  projectId        String
+  projectVersionId String?
+  triggerType      TriggerType      @default(SCHEDULED)
+  status           ExecutionStatus  @default(QUEUED)
+  startedAt        DateTime?
+  completedAt      DateTime?
+  summary          String?
+  errorLog         String?
+  tasksCount       Int              @default(0)
+  changedFiles     String[]         @default([])
+  testResults      Json?
+  buildResults     Json?
+  metadata         Json?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  project          Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectVersion   ProjectVersion?  @relation(fields: [projectVersionId], references: [id], onDelete: SetNull)
+  tasks            DevelopmentTask[]
+  artifacts        Artifact[]
+  githubSync       GitHubSync?
+
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("daily_executions")
+}
+
+model Artifact {
+  id               String          @id @default(cuid())
+  projectId        String
+  projectVersionId String?
+  dailyExecutionId String?
+  teamId           String?
+  type             ArtifactType    @default(PROJECT_ZIP)
+  name             String
+  filePath         String
+  fileSize         BigInt          @default(0)
+  checksum         String
+  metadata         Json?
+  downloadCount    Int             @default(0)
+  createdAt        DateTime        @default(now())
+
+  project          Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectVersion   ProjectVersion? @relation(fields: [projectVersionId], references: [id], onDelete: SetNull)
+  dailyExecution   DailyExecution? @relation(fields: [dailyExecutionId], references: [id], onDelete: SetNull)
+  team             Team?           @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([type])
+  @@index([dailyExecutionId])
+  @@index([teamId])
+  @@map("artifacts")
+}
+
+model GitHubSync {
+  id                String           @id @default(cuid())
+  projectId         String
+  dailyExecutionId  String           @unique
+  repositoryId      String
+  branchName        String
+  commitSha         String?
+  pullRequestUrl    String?
+  pullRequestNumber Int?
+  status            GitHubSyncStatus @default(PENDING)
+  errorLog          String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  dailyExecution    DailyExecution   @relation(fields: [dailyExecutionId], references: [id], onDelete: Cascade)
+  repository        Repository       @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([repositoryId])
+  @@index([status])
+  @@map("github_syncs")
 }
 

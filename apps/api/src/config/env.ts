@@ -32,6 +32,7 @@ const envSchema = z.object({
   API_URL: z.string().default('http://localhost:4000'),
   FRONTEND_URL: z.string().default('http://localhost:3000'),
   DEFAULT_TIMEZONE: z.string().default('Asia/Kolkata'),
+  STORAGE_DIR: z.string().default('./data/storage'),
 });
 
 export const env = envSchema.parse(process.env);

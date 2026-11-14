@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
@@ -8,6 +9,7 @@ import { prisma } from '@devpilot/database';
 import { normalizePrivateKey } from '@devpilot/github';
 import { signSessionPayload } from '../utils/crypto.js';
 import { AUTH_COOKIE_NAME, INSTALL_STATE_COOKIE_NAME } from '@devpilot/shared';
+import { env } from '../config/env.js';
 
 describe('GitHub App Integration & Lifecycle Tests', () => {
   const app = createApp();
@@ -17,6 +19,14 @@ describe('GitHub App Integration & Lifecycle Tests', () => {
   let repoId: string;
   const mockInstallationId = 987654321;
   const mockRepoId = 88776655;
+
+  function signWebhook(payload: Record<string, unknown>): string {
+    if (!env.GITHUB_WEBHOOK_SECRET) return '';
+    return `sha256=${crypto
+      .createHmac('sha256', env.GITHUB_WEBHOOK_SECRET)
+      .update(JSON.stringify(payload))
+      .digest('hex')}`;
+  }
 
   beforeEach(async () => {
     const org = await prisma.organization.create({
@@ -149,11 +159,30 @@ describe('GitHub App Integration & Lifecycle Tests', () => {
   });
 
   describe('GitHub Webhook Handling & Lifecycle Events', () => {
-    it('responds to ping event with pong', async () => {
+    it('rejects webhooks with invalid signature when secret is configured', async () => {
+      if (!env.GITHUB_WEBHOOK_SECRET) return;
+
       const res = await request(app)
         .post('/api/github/webhook')
         .set('x-github-event', 'ping')
-        .send({ zen: 'Keep it logically awesome.' });
+        .set('x-hub-signature-256', 'sha256=invalid_bad_signature_0000000000')
+        .send({ zen: 'Testing signature check' });
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('INVALID_SIGNATURE');
+    });
+
+    it('responds to ping event with pong', async () => {
+      const payload = { zen: 'Keep it logically awesome.' };
+      const reqBuilder = request(app)
+        .post('/api/github/webhook')
+        .set('x-github-event', 'ping');
+
+      if (env.GITHUB_WEBHOOK_SECRET) {
+        reqBuilder.set('x-hub-signature-256', signWebhook(payload));
+      }
+
+      const res = await reqBuilder.send(payload);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -161,15 +190,22 @@ describe('GitHub App Integration & Lifecycle Tests', () => {
     });
 
     it('disconnects all repositories when an installation is deleted on GitHub', async () => {
-      const res = await request(app)
+      const payload = {
+        action: 'deleted',
+        installation: {
+          id: mockInstallationId,
+        },
+      };
+
+      const reqBuilder = request(app)
         .post('/api/github/webhook')
-        .set('x-github-event', 'installation')
-        .send({
-          action: 'deleted',
-          installation: {
-            id: mockInstallationId,
-          },
-        });
+        .set('x-github-event', 'installation');
+
+      if (env.GITHUB_WEBHOOK_SECRET) {
+        reqBuilder.set('x-hub-signature-256', signWebhook(payload));
+      }
+
+      const res = await reqBuilder.send(payload);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
@@ -185,18 +221,25 @@ describe('GitHub App Integration & Lifecycle Tests', () => {
     });
 
     it('disconnects specific repositories when removed from installation', async () => {
-      const res = await request(app)
+      const payload = {
+        action: 'removed',
+        installation: {
+          id: mockInstallationId,
+        },
+        repositories_removed: [
+          { id: mockRepoId, name: 'verified-test-repo', full_name: 'test-org/verified-test-repo' },
+        ],
+      };
+
+      const reqBuilder = request(app)
         .post('/api/github/webhook')
-        .set('x-github-event', 'installation_repositories')
-        .send({
-          action: 'removed',
-          installation: {
-            id: mockInstallationId,
-          },
-          repositories_removed: [
-            { id: mockRepoId, name: 'verified-test-repo', full_name: 'test-org/verified-test-repo' },
-          ],
-        });
+        .set('x-github-event', 'installation_repositories');
+
+      if (env.GITHUB_WEBHOOK_SECRET) {
+        reqBuilder.set('x-hub-signature-256', signWebhook(payload));
+      }
+
+      const res = await reqBuilder.send(payload);
 
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);

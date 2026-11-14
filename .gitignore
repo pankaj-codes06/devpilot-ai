@@ -43,3 +43,8 @@ packages/database/prisma/*.db-journal
 .vite
 tsconfig.tsbuildinfo
 
+# Storage & Project Workspaces
+data/
+storage/
+*.zip
+
