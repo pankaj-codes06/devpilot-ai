@@ -1,3 +1,6 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
 import { Octokit } from '@octokit/rest';
 import { createAppAuth } from '@octokit/auth-app';
 import type {
@@ -5,6 +8,67 @@ import type {
   GitHubInstallationSummary,
   GitHubRepositoryDetails,
 } from './types.js';
+
+/**
+ * Normalizes a GitHub App private key from various input forms:
+ * - Direct multiline PEM string
+ * - PEM string with escaped '\n'
+ * - File path to a .pem or .key file on disk
+ * - Base64 encoded PEM string
+ */
+export function normalizePrivateKey(rawKey: string): string {
+  if (!rawKey) return '';
+  let key = rawKey.trim();
+
+  // Strip wrapping quotes if present
+  if (
+    (key.startsWith('"') && key.endsWith('"')) ||
+    (key.startsWith("'") && key.endsWith("'"))
+  ) {
+    key = key.slice(1, -1).trim();
+  }
+
+  // Check if it's a file path on disk
+  if (
+    key.startsWith('/') ||
+    key.startsWith('./') ||
+    key.startsWith('../') ||
+    key.startsWith('~/') ||
+    key.endsWith('.pem') ||
+    key.endsWith('.key')
+  ) {
+    const resolvedPath = key.startsWith('~/')
+      ? path.join(os.homedir(), key.slice(2))
+      : path.resolve(key);
+
+    try {
+      if (fs.existsSync(resolvedPath)) {
+        key = fs.readFileSync(resolvedPath, 'utf-8').trim();
+      }
+    } catch {
+      // Fall through to parse as inline string
+    }
+  }
+
+  // Handle base64 encoded PEM
+  if (!key.includes('-----BEGIN') && key.length > 64) {
+    try {
+      const decoded = Buffer.from(key, 'base64').toString('utf-8');
+      if (decoded.includes('-----BEGIN')) {
+        key = decoded;
+      }
+    } catch {
+      // Not base64
+    }
+  }
+
+  // Normalize literal \n escapes to real newlines
+  if (key.includes('\\n')) {
+    key = key.replace(/\\n/g, '\n');
+  }
+
+  return key.trim();
+}
 
 export class GitHubAppService {
   private config: GitHubAppConfig;
@@ -15,14 +79,15 @@ export class GitHubAppService {
         'GitHub App configuration requires appId and privateKey'
       );
     }
-    // Normalize multiline private key if \n was escaped in .env
-    const normalizedKey = config.privateKey.includes('\\n')
-      ? config.privateKey.replace(/\\n/g, '\n')
-      : config.privateKey;
+
+    const resolvedKey = normalizePrivateKey(config.privateKey);
+    if (!resolvedKey) {
+      throw new Error('Failed to resolve valid GitHub App private key');
+    }
 
     this.config = {
       ...config,
-      privateKey: normalizedKey.trim(),
+      privateKey: resolvedKey,
     };
   }
 

@@ -25,9 +25,13 @@ export const RepositoriesPage: React.FC = () => {
   const [installableRepos, setInstallableRepos] = useState<GitHubInstallableRepo[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
-  const [showConnectModal, setShowConnectModal] = useState(
-    searchParams.get('action') === 'connect' || searchParams.get('installed') === 'true'
-  );
+  const isInstallRedirect =
+    searchParams.get('action') === 'connect' ||
+    searchParams.get('installed') === 'true' ||
+    Boolean(searchParams.get('installation_id')) ||
+    Boolean(searchParams.get('setup_action'));
+
+  const [showConnectModal, setShowConnectModal] = useState(isInstallRedirect);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionError, setActionError] = useState<string | null>(null);
   const [processingRepoId, setProcessingRepoId] = useState<number | string | null>(null);
@@ -60,6 +64,10 @@ export const RepositoriesPage: React.FC = () => {
 
   useEffect(() => {
     fetchConnectedRepos();
+    if (isInstallRedirect) {
+      setShowConnectModal(true);
+      fetchAvailableRepos();
+    }
   }, []);
 
   const openConnectDrawer = () => {

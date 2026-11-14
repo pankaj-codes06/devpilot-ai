@@ -1,5 +1,7 @@
 import crypto from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
+import { verifyWebhookSignature } from '@devpilot/github';
+import { prisma } from '@devpilot/database';
 import {
   INSTALL_STATE_COOKIE_NAME,
   type ConnectRepositoryInput,
@@ -197,6 +199,73 @@ export class GitHubController {
     } catch (error) {
       next(error);
     }
+  }
+
+  /**
+   * POST /api/github/webhook
+   * GitHub App webhook receiver (verifies x-hub-signature-256 HMAC).
+   */
+  static async webhook(req: Request, res: Response): Promise<void> {
+    const signature = req.headers['x-hub-signature-256'] as string | undefined;
+    const event = req.headers['x-github-event'] as string | undefined;
+
+    // Validate signature if webhook secret is configured
+    if (env.GITHUB_WEBHOOK_SECRET) {
+      const rawPayload = (req as any).rawBody || JSON.stringify(req.body);
+      const isValid = verifyWebhookSignature(
+        rawPayload,
+        signature,
+        env.GITHUB_WEBHOOK_SECRET
+      );
+
+      if (!isValid) {
+        sendError(res, 'INVALID_SIGNATURE', 'Invalid GitHub webhook signature', 401);
+        return;
+      }
+    }
+
+    if (event === 'ping') {
+      sendSuccess(res, { message: 'pong', zen: req.body?.zen });
+      return;
+    }
+
+    if (event === 'installation') {
+      const action = req.body?.action;
+      const installationId = req.body?.installation?.id;
+
+      if (action === 'deleted' && installationId) {
+        // App was uninstalled from GitHub account -> disconnect all linked repositories
+        await prisma.repository.updateMany({
+          where: { installationId: BigInt(installationId) },
+          data: { isConnected: false },
+        });
+
+        await prisma.agentSettings.updateMany({
+          where: { repository: { installationId: BigInt(installationId) } },
+          data: { isEnabled: false },
+        });
+      }
+    } else if (event === 'installation_repositories') {
+      const action = req.body?.action;
+      const removed = req.body?.repositories_removed;
+
+      if (action === 'removed' && Array.isArray(removed)) {
+        for (const repo of removed) {
+          if (repo.id) {
+            await prisma.repository.updateMany({
+              where: { githubRepoId: BigInt(repo.id) },
+              data: { isConnected: false },
+            });
+            await prisma.agentSettings.updateMany({
+              where: { repository: { githubRepoId: BigInt(repo.id) } },
+              data: { isEnabled: false },
+            });
+          }
+        }
+      }
+    }
+
+    sendSuccess(res, { received: true, event });
   }
 }
 

@@ -4,6 +4,7 @@ import os from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createAppAuth } from '@octokit/auth-app';
+import { normalizePrivateKey } from '@devpilot/github';
 import { env } from '../config/env.js';
 
 const execFileAsync = promisify(execFile);
@@ -69,13 +70,14 @@ export class SecureCloner {
       }
 
       // Generate short-lived installation access token
-      const normalizedKey = env.GITHUB_APP_PRIVATE_KEY.includes('\\n')
-        ? env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n')
-        : env.GITHUB_APP_PRIVATE_KEY;
+      const resolvedKey = normalizePrivateKey(env.GITHUB_APP_PRIVATE_KEY);
+      if (!resolvedKey) {
+        throw new Error('Failed to resolve valid GitHub App private key from environment.');
+      }
 
       const auth = createAppAuth({
         appId: env.GITHUB_APP_ID,
-        privateKey: normalizedKey,
+        privateKey: resolvedKey,
       });
 
       const installationAuth = await auth({

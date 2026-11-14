@@ -46,7 +46,14 @@ export function createApp() {
   );
 
   // Standard middlewares
-  app.use(express.json({ limit: '2mb' }));
+  app.use(
+    express.json({
+      limit: '2mb',
+      verify: (req: any, _res, buf) => {
+        req.rawBody = buf;
+      },
+    })
+  );
   app.use(express.urlencoded({ extended: true }));
   app.use(cookieParser());
 

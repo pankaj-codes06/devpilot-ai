@@ -8,6 +8,7 @@ const router = Router();
 // Installation flow
 router.get('/install', GitHubController.install);
 router.get('/callback', GitHubController.callback);
+router.post('/webhook', GitHubController.webhook);
 
 // Authenticated repository management
 router.get('/repositories', requireAuth, GitHubController.listRepositories);
