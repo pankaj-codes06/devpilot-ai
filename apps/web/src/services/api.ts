@@ -6,6 +6,9 @@ import type {
   GitHubInstallableRepo,
   DashboardStatsDto,
   UpdateAgentSettingsInput,
+  RepositoryAnalysisOverviewDto,
+  AgentRunDetailsDto,
+  TaskPlanDto,
 } from '@devpilot/shared';
 
 const API_BASE = '/api';
@@ -112,6 +115,28 @@ export const api = {
     },
     async getDashboardStats(): Promise<DashboardStatsDto> {
       return request('/repositories/dashboard/stats');
+    },
+  },
+
+  // Repository Intelligence & Analysis
+  analysis: {
+    async triggerAnalysis(
+      repositoryId: string
+    ): Promise<{ runId: string; status: string; repositoryName: string }> {
+      return request(`/repositories/${repositoryId}/analyze`, {
+        method: 'POST',
+      });
+    },
+    async getOverview(
+      repositoryId: string
+    ): Promise<RepositoryAnalysisOverviewDto> {
+      return request(`/repositories/${repositoryId}/analysis`);
+    },
+    async getTasks(repositoryId: string): Promise<TaskPlanDto[]> {
+      return request(`/repositories/${repositoryId}/tasks`);
+    },
+    async getRunDetails(runId: string): Promise<AgentRunDetailsDto> {
+      return request(`/agent-runs/${runId}`);
     },
   },
 

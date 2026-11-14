@@ -14,7 +14,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
   DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
-  REDIS_URL: z.string().default('redis://localhost:6379'),
+  REDIS_URL: z.string().default('redis://127.0.0.1:6379'),
 
   // GitHub OAuth App
   GITHUB_CLIENT_ID: z.string().optional().default(''),

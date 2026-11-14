@@ -34,3 +34,7 @@ export const OAUTH_STATE_COOKIE_NAME = 'devpilot_oauth_state';
 export const INSTALL_STATE_COOKIE_NAME = 'devpilot_install_state';
 export const ACTIVE_ORG_COOKIE_NAME = 'devpilot_active_org';
 
+export const REPOSITORY_ANALYSIS_QUEUE = 'repository-analysis';
+export const ANALYSIS_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+
+

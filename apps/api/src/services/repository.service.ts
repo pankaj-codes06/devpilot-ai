@@ -333,6 +333,7 @@ export class RepositoryService {
       isConnected: serialized.isConnected,
       connectedAt: serialized.connectedAt ? new Date(serialized.connectedAt).toISOString() : new Date().toISOString(),
       lastSyncedAt: serialized.lastSyncedAt ? new Date(serialized.lastSyncedAt).toISOString() : new Date().toISOString(),
+      lastAnalyzedAt: serialized.lastAnalyzedAt ? new Date(serialized.lastAnalyzedAt).toISOString() : null,
       createdAt: new Date(serialized.createdAt).toISOString(),
       updatedAt: new Date(serialized.updatedAt).toISOString(),
       agentSettings: serialized.agentSettings

@@ -110,6 +110,7 @@ model Repository {
   isConnected    Boolean        @default(true)
   connectedAt    DateTime       @default(now())
   lastSyncedAt   DateTime       @default(now())
+  lastAnalyzedAt DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
@@ -178,6 +179,8 @@ model AgentRun {
   errorLog       String?
   commitHash     String?
   pullRequestId  String?
+  metadata       Json?
+  findings       Json?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 
@@ -193,20 +196,31 @@ model AgentRun {
 }
 
 model AgentTask {
-  id          String     @id @default(cuid())
-  agentRunId  String
-  title       String
-  description String?
-  status      TaskStatus @default(PENDING)
-  order       Int        @default(0)
-  output      String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  id                  String     @id @default(cuid())
+  agentRunId          String
+  title               String
+  description         String?
+  status              TaskStatus @default(PENDING)
+  order               Int        @default(0)
+  priority            String     @default("MEDIUM")
+  category            String     @default("IMPROVEMENT")
+  estimatedComplexity String     @default("M")
+  expectedBenefit     String?
+  suggestedApproach   String?
+  requiredTests       String?
+  moduleName          String?
+  assignedMember      String?
+  relevantFiles       String[]   @default([])
+  evidence            String?
+  output              String?
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
 
-  agentRun    AgentRun   @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
+  agentRun            AgentRun   @relation(fields: [agentRunId], references: [id], onDelete: Cascade)
 
   @@index([agentRunId])
   @@index([status])
+  @@index([priority])
   @@map("agent_tasks")
 }
 

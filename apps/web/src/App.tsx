@@ -8,6 +8,7 @@ import { RepositoriesPage } from './pages/RepositoriesPage.js';
 import { AgentSettingsPage } from './pages/AgentSettingsPage.js';
 import { TeamSettingsPage } from './pages/TeamSettingsPage.js';
 import { ActivityPage } from './pages/ActivityPage.js';
+import { RepositoryIntelligencePage } from './pages/RepositoryIntelligencePage.js';
 
 export const App: React.FC = () => {
   return (
@@ -20,6 +21,7 @@ export const App: React.FC = () => {
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/repositories" element={<RepositoriesPage />} />
+            <Route path="/repositories/:id/intelligence" element={<RepositoryIntelligencePage />} />
             <Route path="/agent-settings" element={<AgentSettingsPage />} />
             <Route path="/team-settings" element={<TeamSettingsPage />} />
             <Route path="/activity" element={<ActivityPage />} />

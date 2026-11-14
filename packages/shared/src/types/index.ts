@@ -45,6 +45,7 @@ export interface RepositoryDto {
   isConnected: boolean;
   connectedAt: string;
   lastSyncedAt: string;
+  lastAnalyzedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   agentSettings?: AgentSettingsDto | null;
@@ -93,4 +94,88 @@ export interface DashboardStatsDto {
     repositoryName?: string;
   }>;
 }
+
+export type TaskPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
+export type TaskCategory =
+  | 'BUG_RISK'
+  | 'TEST_COVERAGE'
+  | 'DUPLICATION'
+  | 'DOCUMENTATION'
+  | 'TECH_DEBT'
+  | 'SECURITY';
+
+export type TaskComplexity = 'XS' | 'S' | 'M' | 'L' | 'XL';
+
+export interface ArchitectureSummary {
+  languages: Record<string, number>;
+  frameworks: string[];
+  packageManager?: string;
+  projectType: string;
+  totalFiles: number;
+  totalLinesOfCode?: number;
+  testFrameworks: string[];
+  hasDocumentation: boolean;
+  hasCi: boolean;
+  entryPoints: string[];
+  modules: Array<{
+    name: string;
+    pathPattern: string;
+    ownerName?: string;
+    fileCount: number;
+  }>;
+}
+
+export interface TaskPlanDto {
+  id: string;
+  agentRunId: string;
+  title: string;
+  description: string | null;
+  priority: TaskPriority;
+  category: TaskCategory;
+  estimatedComplexity: TaskComplexity;
+  expectedBenefit: string | null;
+  suggestedApproach: string | null;
+  requiredTests: string | null;
+  moduleName: string | null;
+  assignedMember: string | null;
+  relevantFiles: string[];
+  evidence: string | null;
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'FAILED' | 'SKIPPED';
+  order: number;
+  createdAt: string;
+}
+
+export interface AgentRunDetailsDto {
+  id: string;
+  repositoryId: string;
+  triggerType: 'SCHEDULED' | 'MANUAL' | 'WEBHOOK';
+  status: 'QUEUED' | 'RUNNING' | 'SUCCESS' | 'FAILED' | 'CANCELLED';
+  startedAt: string | null;
+  completedAt: string | null;
+  summary: string | null;
+  errorLog: string | null;
+  metadata: ArchitectureSummary | null;
+  findings: unknown | null;
+  tasks: TaskPlanDto[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RepositoryAnalysisOverviewDto {
+  repositoryId: string;
+  latestRun: AgentRunDetailsDto | null;
+  architecture: ArchitectureSummary | null;
+  totalTasks: number;
+  tasksByPriority: Record<TaskPriority, number>;
+  tasksByCategory: Record<string, number>;
+}
+
+export interface AnalysisJobData {
+  repositoryId: string;
+  organizationId: string;
+  runId: string;
+  triggerType: 'MANUAL' | 'SCHEDULED';
+}
+
 

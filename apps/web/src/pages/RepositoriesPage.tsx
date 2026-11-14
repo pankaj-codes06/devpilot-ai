@@ -13,6 +13,7 @@ import {
   Lock,
   Globe,
   Search,
+  Brain,
 } from 'lucide-react';
 import { Header } from '../components/Header.js';
 import { api } from '../services/api.js';
@@ -249,6 +250,13 @@ export const RepositoriesPage: React.FC = () => {
 
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end space-x-2">
+                          <Link
+                            to={`/repositories/${repo.id}/intelligence`}
+                            className="p-1.5 text-slate-400 hover:text-purple-400 hover:bg-slate-800 rounded transition"
+                            title="Repository Intelligence & Backlog"
+                          >
+                            <Brain className="w-4 h-4" />
+                          </Link>
                           <Link
                             to={`/agent-settings?repoId=${repo.id}`}
                             className="p-1.5 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded transition"

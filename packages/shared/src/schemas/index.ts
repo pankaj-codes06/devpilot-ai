@@ -38,3 +38,39 @@ export type ConnectRepositoryInput = z.infer<typeof connectRepositorySchema>;
 export type SyncRepositoriesInput = z.infer<typeof syncRepositoriesSchema>;
 export type UpdateAgentSettingsInput = z.infer<typeof updateAgentSettingsSchema>;
 
+export const prioritizedTaskSchema = z.object({
+  title: z.string().min(3),
+  description: z.string(),
+  module: z.string().default('Unassigned'),
+  relevantFiles: z.array(z.string()),
+  evidence: z.string(),
+  priority: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']),
+  category: z.enum([
+    'BUG_RISK',
+    'TEST_COVERAGE',
+    'DUPLICATION',
+    'DOCUMENTATION',
+    'TECH_DEBT',
+    'SECURITY',
+  ]),
+  estimatedComplexity: z.enum(['XS', 'S', 'M', 'L', 'XL']),
+  expectedBenefit: z.string(),
+  suggestedApproach: z.string(),
+  requiredTests: z.string(),
+});
+
+export const codebaseAnalysisOutputSchema = z.object({
+  summary: z.string(),
+  architecture: z.object({
+    overview: z.string(),
+    primaryLanguages: z.array(z.string()),
+    detectedFrameworks: z.array(z.string()),
+    projectStructure: z.string(),
+  }),
+  tasks: z.array(prioritizedTaskSchema),
+});
+
+export type PrioritizedTaskInput = z.infer<typeof prioritizedTaskSchema>;
+export type CodebaseAnalysisOutput = z.infer<typeof codebaseAnalysisOutputSchema>;
+
+
