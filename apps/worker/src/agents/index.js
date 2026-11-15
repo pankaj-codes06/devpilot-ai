@@ -9,14 +9,13 @@ import { ExecutorService } from '../executor/index.js';
 import { SchedulerService } from '../scheduler/index.js';
 
 export class AutonomousAgentPipeline {
-  readonly planner = new PlannerService();
-  readonly coder = new CoderService();
-  readonly reviewer = new ReviewerService();
-  readonly executor = new ExecutorService();
-  readonly scheduler = new SchedulerService();
-
   constructor() {
+    this.planner = new PlannerService();
+    this.coder = new CoderService();
+    this.reviewer = new ReviewerService();
+    this.executor = new ExecutorService();
+    this.scheduler = new SchedulerService();
+
     console.log('[DevPilot Worker] Agent pipeline initialized in standby mode (Phase 1)');
   }
 }
-

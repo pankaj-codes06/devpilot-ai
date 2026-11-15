@@ -1,7 +1,7 @@
-import { Redis, type RedisOptions } from 'ioredis';
+import { Redis } from 'ioredis';
 import { env } from '../config/env.js';
 
-export function getRedisOptions(): RedisOptions {
+export function getRedisOptions() {
   return {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
@@ -12,7 +12,7 @@ export function getRedisOptions(): RedisOptions {
   };
 }
 
-export function createRedisConnection(): Redis {
+export function createRedisConnection() {
   return new Redis(env.REDIS_URL, getRedisOptions());
 }
 

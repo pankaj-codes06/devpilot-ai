@@ -3,10 +3,9 @@ import {
   HeuristicStaticProvider,
   IntelligenceEngineFactory,
 } from '../planner/intelligence.js';
-import type { CodebaseAnalysisResult } from '../planner/analyzer.js';
 
 describe('AI Intelligence Engine Provider Abstraction', () => {
-  const mockAnalysis: CodebaseAnalysisResult = {
+  const mockAnalysis = {
     summary: {
       languages: { TypeScript: 80, JavaScript: 20 },
       frameworks: ['Express', 'React'],

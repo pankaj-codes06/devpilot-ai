@@ -5,7 +5,7 @@ import os from 'node:os';
 import { RepositoryAnalyzer } from '../planner/analyzer.js';
 
 describe('Deterministic Repository Analyzer', () => {
-  let tempRepoDir: string;
+  let tempRepoDir;
 
   beforeEach(async () => {
     tempRepoDir = path.join(os.tmpdir(), `test-analyzer-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`);

@@ -6,7 +6,7 @@ console.log('[DevPilot Worker] Starting background worker process (Phase 2A)...'
 
 analysisWorker.start();
 
-const shutdown = async (signal: string) => {
+const shutdown = async (signal) => {
   console.log(`[DevPilot Worker] Received ${signal}. Shutting down worker gracefully...`);
   try {
     await analysisWorker.close();

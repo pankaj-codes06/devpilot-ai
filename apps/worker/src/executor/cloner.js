@@ -9,27 +9,12 @@ import { env } from '../config/env.js';
 
 const execFileAsync = promisify(execFile);
 
-export interface CloneOptions {
-  runId: string;
-  githubRepoId: number | bigint;
-  installationId: number | bigint;
-  owner: string;
-  name: string;
-  defaultBranch?: string;
-  timeoutMs?: number;
-}
-
-export interface ClonedWorkspace {
-  workspacePath: string;
-  cleanup: () => Promise<void>;
-}
-
 export class SecureCloner {
   /**
    * Clones an authorized GitHub repository into an isolated, ephemeral workspace.
    * Sanitizes all credentials from .git/config immediately upon clone.
    */
-  static async cloneRepository(options: CloneOptions): Promise<ClonedWorkspace> {
+  static async cloneRepository(options) {
     const { runId, installationId, owner, name, defaultBranch = 'main', timeoutMs = 120000 } = options;
 
     // Security: Validate owner and name against path traversal
@@ -42,7 +27,7 @@ export class SecureCloner {
     const baseDir = path.join(os.tmpdir(), 'devpilot-workspaces');
     await fs.mkdir(baseDir, { recursive: true });
 
-    const safeRunId = runId.replace(/[^a-zA-Z0-9_-]/g, '');
+    const safeRunId = String(runId).replace(/[^a-zA-Z0-9_-]/g, '');
     const workspacePath = path.join(baseDir, `repo-${safeRunId}-${Date.now().toString(36)}`);
 
     // Verify workspacePath is strictly inside baseDir (path traversal check)

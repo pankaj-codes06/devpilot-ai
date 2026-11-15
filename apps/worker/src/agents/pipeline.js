@@ -1,15 +1,14 @@
 import { prisma, serializeBigInt } from '@devpilot/database';
 import { ExecutionStatus, TaskStatus } from '@devpilot/database';
-import type { AnalysisJobData } from '@devpilot/shared';
 import { SecureCloner } from '../executor/cloner.js';
-import { RepositoryAnalyzer, type TeamModuleInput } from '../planner/analyzer.js';
+import { RepositoryAnalyzer } from '../planner/analyzer.js';
 import { IntelligenceEngineFactory } from '../planner/intelligence.js';
 
 export class RepositoryAnalysisPipeline {
   /**
    * Executes a complete, sandboxed repository analysis run.
    */
-  static async run(jobData: AnalysisJobData): Promise<void> {
+  static async run(jobData) {
     const { repositoryId, organizationId, runId } = jobData;
 
     console.log(`[AnalysisPipeline] Starting analysis run ${runId} for repository ${repositoryId}`);
@@ -50,7 +49,7 @@ export class RepositoryAnalysisPipeline {
     });
 
     // 3. Prepare Team Modules
-    const teamModules: TeamModuleInput[] = repo.modules.map((m) => ({
+    const teamModules = repo.modules.map((m) => ({
       id: m.id,
       name: m.name,
       pathPattern: m.pathPattern,
@@ -60,7 +59,7 @@ export class RepositoryAnalysisPipeline {
     const allowedPaths = repo.agentSettings?.allowedPaths || [];
     const excludedPaths = repo.agentSettings?.excludedPaths || [];
 
-    let workspace: { workspacePath: string; cleanup: () => Promise<void> } | null = null;
+    let workspace = null;
 
     try {
       // 4. Secure Clone (credentials cleaned immediately from .git/config)
@@ -92,7 +91,7 @@ export class RepositoryAnalysisPipeline {
       });
 
       // 7. Deduplicate & Enrich Tasks with Team Member Context
-      const moduleOwnerMap = new Map<string, string>();
+      const moduleOwnerMap = new Map();
       for (const mod of teamModules) {
         if (mod.ownerName) {
           moduleOwnerMap.set(mod.name, mod.ownerName);
@@ -140,8 +139,8 @@ export class RepositoryAnalysisPipeline {
           data: {
             status: ExecutionStatus.SUCCESS,
             summary: aiOutput.summary,
-            metadata: serializeBigInt(staticAnalysis.summary) as any,
-            findings: aiOutput.tasks as any,
+            metadata: serializeBigInt(staticAnalysis.summary),
+            findings: aiOutput.tasks,
             completedAt: new Date(),
           },
         });

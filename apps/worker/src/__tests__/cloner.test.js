@@ -28,7 +28,7 @@ describe('Secure Repository Cloner Safety Controls', () => {
   it('fails safely when GitHub App credentials are not configured', async () => {
     const originalAppId = env.GITHUB_APP_ID;
     try {
-      (env as any).GITHUB_APP_ID = 0;
+      env.GITHUB_APP_ID = 0;
       await expect(
         SecureCloner.cloneRepository({
           runId: 'test-run-unconfigured',
@@ -39,7 +39,7 @@ describe('Secure Repository Cloner Safety Controls', () => {
         })
       ).rejects.toThrow(/GitHub App credentials/);
     } finally {
-      (env as any).GITHUB_APP_ID = originalAppId;
+      env.GITHUB_APP_ID = originalAppId;
     }
   });
 });

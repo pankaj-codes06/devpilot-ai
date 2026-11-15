@@ -1,13 +1,15 @@
-import { Worker, type Job } from 'bullmq';
-import { REPOSITORY_ANALYSIS_QUEUE, type AnalysisJobData } from '@devpilot/shared';
+import { Worker } from 'bullmq';
+import { REPOSITORY_ANALYSIS_QUEUE } from '@devpilot/shared';
 import { getRedisOptions } from './redis.js';
 import { env } from '../config/env.js';
 import { RepositoryAnalysisPipeline } from '../agents/pipeline.js';
 
 export class AnalysisWorker {
-  private worker: Worker<AnalysisJobData> | null = null;
+  constructor() {
+    this.worker = null;
+  }
 
-  start(): void {
+  start() {
     if (this.worker) {
       console.warn('[AnalysisWorker] Worker is already running.');
       return;
@@ -17,9 +19,9 @@ export class AnalysisWorker {
       `[AnalysisWorker] Initializing repository-analysis worker (concurrency: ${env.WORKER_CONCURRENCY})...`
     );
 
-    this.worker = new Worker<AnalysisJobData>(
+    this.worker = new Worker(
       REPOSITORY_ANALYSIS_QUEUE,
-      async (job: Job<AnalysisJobData>) => {
+      async (job) => {
         console.log(
           `[AnalysisWorker] Processing job ${job.id} for repo ${job.data.repositoryId} (run: ${job.data.runId})`
         );
@@ -52,7 +54,7 @@ export class AnalysisWorker {
     console.log('[AnalysisWorker] Worker process is active and listening for jobs.');
   }
 
-  async close(): Promise<void> {
+  async close() {
     if (this.worker) {
       console.log('[AnalysisWorker] Closing worker process gracefully...');
       await this.worker.close();
