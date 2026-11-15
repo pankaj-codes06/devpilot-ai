@@ -1,10 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __prismaClient: PrismaClient | undefined;
-}
-
 export const prisma =
   global.__prismaClient ||
   new PrismaClient({
@@ -20,8 +15,10 @@ if (process.env.NODE_ENV !== 'production') {
 
 /**
  * Utility to convert BigInt fields to strings for safe JSON serialization.
+ * @param {any} obj - Object, array, or primitive potentially containing BigInt values
+ * @returns {any} Serialized object with BigInts converted to strings
  */
-export function serializeBigInt<T>(obj: T): T {
+export function serializeBigInt(obj) {
   return JSON.parse(
     JSON.stringify(obj, (_, value) =>
       typeof value === 'bigint' ? value.toString() : value
@@ -30,4 +27,3 @@ export function serializeBigInt<T>(obj: T): T {
 }
 
 export * from '@prisma/client';
-
