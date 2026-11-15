@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { api } from '../services/api.js';
 
-export const Header = ({ title, description, actions }) => {
+export const Header = ({ title, description = '', actions = null }) => {
   const navigate = useNavigate();
   const [healthStatus, setHealthStatus] = useState('checking');
 
