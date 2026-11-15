@@ -7,11 +7,7 @@ import crypto from 'node:crypto';
  * @param signature Header 'x-hub-signature-256' sent by GitHub
  * @param secret Configured webhook secret
  */
-export function verifyWebhookSignature(
-  payload: string | Buffer,
-  signature: string | undefined,
-  secret: string
-): boolean {
+export function verifyWebhookSignature(payload, signature, secret) {
   if (!signature || !secret) {
     return false;
   }
@@ -30,4 +26,3 @@ export function verifyWebhookSignature(
 
   return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
 }
-

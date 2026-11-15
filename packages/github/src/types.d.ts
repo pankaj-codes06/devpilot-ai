@@ -44,3 +44,4 @@ export interface GitHubInstallationSummary {
   htmlUrl: string;
 }
 
+export declare const GITHUB_API_BASE_URL: string;

@@ -2,39 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import fg from 'fast-glob';
 import ignore from 'ignore';
-import type { ArchitectureSummary } from '@devpilot/shared';
 
-function createIgnore(): any {
-  const fn = typeof ignore === 'function' ? ignore : (ignore as any).default;
+function createIgnore() {
+  const fn = typeof ignore === 'function' ? ignore : ignore.default;
   return fn();
-}
-
-export interface TeamModuleInput {
-  id: string;
-  name: string;
-  pathPattern: string;
-  ownerName?: string;
-  isShared?: boolean;
-}
-
-export interface FileMetadata {
-  relativePath: string;
-  sizeBytes: number;
-  extension: string;
-  moduleName: string;
-  assignedMember?: string;
-}
-
-export interface CodebaseAnalysisResult {
-  summary: ArchitectureSummary;
-  files: FileMetadata[];
-  readmeExcerpt: string | null;
-  contributingExcerpt: string | null;
-  dependencies: Record<string, string>;
-  devDependencies: Record<string, string>;
-  testFiles: string[];
-  schemaFiles: string[];
-  routeFiles: string[];
 }
 
 export const SENSITIVE_EXCLUDE_PATTERNS = [
@@ -68,7 +39,7 @@ export const DIRECTORY_EXCLUDE_PATTERNS = [
   '**/pnpm-lock.yaml',
 ];
 
-const LANGUAGE_EXTENSION_MAP: Record<string, string> = {
+const LANGUAGE_EXTENSION_MAP = {
   '.ts': 'TypeScript',
   '.tsx': 'TypeScript',
   '.js': 'JavaScript',
@@ -103,11 +74,11 @@ export class RepositoryAnalyzer {
    * without executing any untrusted code or scripts.
    */
   static async analyze(
-    repoPath: string,
-    teamModules: TeamModuleInput[] = [],
-    allowedPaths: string[] = [],
-    excludedPaths: string[] = []
-  ): Promise<CodebaseAnalysisResult> {
+    repoPath,
+    teamModules = [],
+    allowedPaths = [],
+    excludedPaths = []
+  ) {
     // 1. Load .gitignore if present
     const ig = createIgnore();
     ig.add(DIRECTORY_EXCLUDE_PATTERNS);
@@ -157,11 +128,11 @@ export class RepositoryAnalyzer {
     });
 
     // 4. Map files and match team modules
-    const languageByteCounts: Record<string, number> = {};
-    const fileMetadataList: FileMetadata[] = [];
-    const testFiles: string[] = [];
-    const schemaFiles: string[] = [];
-    const routeFiles: string[] = [];
+    const languageByteCounts = {};
+    const fileMetadataList = [];
+    const testFiles = [];
+    const schemaFiles = [];
+    const routeFiles = [];
     let totalBytes = 0;
 
     for (const relPath of filteredFiles) {
@@ -205,14 +176,16 @@ export class RepositoryAnalyzer {
         relPath.includes('/controllers/') ||
         relPath.includes('/api/') ||
         relPath.endsWith('server.ts') ||
-        relPath.endsWith('app.ts')
+        relPath.endsWith('server.js') ||
+        relPath.endsWith('app.ts') ||
+        relPath.endsWith('app.js')
       ) {
         routeFiles.push(relPath);
       }
 
       // Team Module matching
       let assignedModule = 'Unassigned';
-      let assignedMember: string | undefined = undefined;
+      let assignedMember = undefined;
 
       for (const mod of teamModules) {
         const modIg = createIgnore().add(mod.pathPattern);
@@ -233,7 +206,7 @@ export class RepositoryAnalyzer {
     }
 
     // 5. Calculate Language Percentages
-    const languages: Record<string, number> = {};
+    const languages = {};
     for (const [lang, bytes] of Object.entries(languageByteCounts)) {
       if (totalBytes > 0) {
         languages[lang] = Math.round((bytes / totalBytes) * 100);
@@ -241,9 +214,9 @@ export class RepositoryAnalyzer {
     }
 
     // 6. Detect Frameworks, Package Manifests & Dependencies
-    const frameworks = new Set<string>();
-    let dependencies: Record<string, string> = {};
-    let devDependencies: Record<string, string> = {};
+    const frameworks = new Set();
+    let dependencies = {};
+    let devDependencies = {};
     let packageManager = 'npm';
     let projectType = 'Generic';
 
@@ -280,7 +253,7 @@ export class RepositoryAnalyzer {
       // Non-Node project or package.json not at root
     }
 
-    // Inspect Python, Go, Rust, Java manifests
+    // Inspect Python, Go, Rust manifests
     const hasRequirements = filteredFiles.some((f) => f === 'requirements.txt' || f === 'pyproject.toml');
     if (hasRequirements) {
       frameworks.add('Python');
@@ -300,7 +273,7 @@ export class RepositoryAnalyzer {
     }
 
     // 7. Detect Documentation Excerpts
-    let readmeExcerpt: string | null = null;
+    let readmeExcerpt = null;
     const readmeFile = filteredFiles.find((f) => f.toLowerCase() === 'readme.md');
     if (readmeFile) {
       try {
@@ -311,7 +284,7 @@ export class RepositoryAnalyzer {
       }
     }
 
-    let contributingExcerpt: string | null = null;
+    let contributingExcerpt = null;
     const contribFile = filteredFiles.find((f) => f.toLowerCase() === 'contributing.md');
     if (contribFile) {
       try {
@@ -323,7 +296,7 @@ export class RepositoryAnalyzer {
     }
 
     // 8. Module Statistics
-    const moduleMap = new Map<string, { pathPattern: string; ownerName?: string; count: number }>();
+    const moduleMap = new Map();
     for (const mod of teamModules) {
       moduleMap.set(mod.name, {
         pathPattern: mod.pathPattern,
@@ -360,18 +333,18 @@ export class RepositoryAnalyzer {
 
     // 9. Detect Entry Points & Test Frameworks
     const entryPoints = filteredFiles.filter((f) =>
-      ['src/main.tsx', 'src/index.ts', 'src/server.ts', 'main.go', 'app.py', 'src/App.tsx', 'src/index.js'].includes(
+      ['src/main.tsx', 'src/index.ts', 'src/index.js', 'src/server.ts', 'src/server.js', 'main.go', 'app.py', 'src/App.tsx', 'src/App.jsx'].includes(
         f
       )
     );
 
-    const testFrameworks: string[] = [];
+    const testFrameworks = [];
     if (frameworks.has('Vitest')) testFrameworks.push('Vitest');
     if (frameworks.has('Jest')) testFrameworks.push('Jest');
     if (hasRequirements) testFrameworks.push('Pytest');
     if (hasGoMod) testFrameworks.push('Go Test');
 
-    const architectureSummary: ArchitectureSummary = {
+    const architectureSummary = {
       languages,
       frameworks: Array.from(frameworks),
       packageManager,

@@ -1,44 +1,13 @@
-import type { CodebaseAnalysisResult } from './analyzer.js';
-
-export interface SuggestedTeam {
-  name: string;
-  slug: string;
-  description: string;
-  color: string;
-}
-
-export interface SuggestedModule {
-  name: string;
-  description: string;
-  pathPattern: string;
-  teamSlug: string | null; // which team it belongs to, or null if shared
-  isShared: boolean;
-  suggestedBy: string;
-}
-
-export interface TeamSuggestionResult {
-  teams: SuggestedTeam[];
-  modules: SuggestedModule[];
-}
-
-export interface ModuleConflictCheck {
-  id?: string;
-  name: string;
-  pathPattern: string;
-  teamId?: string | null;
-  isShared: boolean;
-}
-
 export class TeamSuggester {
   /**
    * Generates automated team assignments and module mappings based on
    * deterministic static codebase analysis.
    */
-  static suggest(analysis: CodebaseAnalysisResult): TeamSuggestionResult {
+  static suggest(analysis) {
     const { summary, files, routeFiles, schemaFiles, testFiles } = analysis;
     const allRelPaths = files.map((f) => f.relativePath);
 
-    const teams: SuggestedTeam[] = [
+    const teams = [
       {
         name: 'Frontend Team',
         slug: 'frontend-team',
@@ -65,7 +34,7 @@ export class TeamSuggester {
       },
     ];
 
-    const modules: SuggestedModule[] = [];
+    const modules = [];
 
     // 1. Check for Monorepo structure (e.g. apps/*, packages/*)
     const hasAppsWeb = allRelPaths.some((p) => p.startsWith('apps/web/') || p.startsWith('packages/web/'));
@@ -194,7 +163,7 @@ export class TeamSuggester {
       modules.push({
         name: 'Test Suites & QA',
         description: 'Automated integration tests, unit tests, and QA specifications.',
-        pathPattern: '**/*.test.ts',
+        pathPattern: '**/*.test.*',
         teamSlug: 'devops-qa-team',
         isShared: false,
         suggestedBy: 'AI_SUGGESTER',
@@ -226,10 +195,7 @@ export class TeamSuggester {
    * 3. Both modules are assigned to DIFFERENT teams (teamId !== existing.teamId).
    * 4. Their path patterns overlap (identical pattern, or one pattern encompasses the other).
    */
-  static detectConflict(
-    existingModules: ModuleConflictCheck[],
-    candidate: ModuleConflictCheck
-  ): { hasConflict: boolean; conflictingModule?: ModuleConflictCheck; reason?: string } {
+  static detectConflict(existingModules, candidate) {
     // If either candidate or existing is explicitly shared, no ownership conflict occurs.
     if (candidate.isShared) {
       return { hasConflict: false };
@@ -272,7 +238,7 @@ export class TeamSuggester {
   /**
    * Determines if two glob / directory patterns overlap.
    */
-  private static patternsOverlap(p1: string, p2: string): boolean {
+  static patternsOverlap(p1, p2) {
     const norm1 = this.normalizePattern(p1);
     const norm2 = this.normalizePattern(p2);
 
@@ -297,7 +263,7 @@ export class TeamSuggester {
     return false;
   }
 
-  private static normalizePattern(p: string): string {
+  static normalizePattern(p) {
     return p.trim().replace(/^[./]+/, '').replace(/\\/g, '/');
   }
 }

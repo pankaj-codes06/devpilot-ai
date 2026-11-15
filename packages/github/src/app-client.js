@@ -3,11 +3,6 @@ import path from 'node:path';
 import os from 'node:os';
 import { Octokit } from '@octokit/rest';
 import { createAppAuth } from '@octokit/auth-app';
-import type {
-  GitHubAppConfig,
-  GitHubInstallationSummary,
-  GitHubRepositoryDetails,
-} from './types.js';
 
 /**
  * Normalizes a GitHub App private key from various input forms:
@@ -16,9 +11,9 @@ import type {
  * - File path to a .pem or .key file on disk
  * - Base64 encoded PEM string
  */
-export function normalizePrivateKey(rawKey: string): string {
+export function normalizePrivateKey(rawKey) {
   if (!rawKey) return '';
-  let key = rawKey.trim();
+  let key = String(rawKey).trim();
 
   // Strip wrapping quotes if present
   if (
@@ -71,10 +66,8 @@ export function normalizePrivateKey(rawKey: string): string {
 }
 
 export class GitHubAppService {
-  private config: GitHubAppConfig;
-
-  constructor(config: GitHubAppConfig) {
-    if (!config.appId || !config.privateKey) {
+  constructor(config) {
+    if (!config?.appId || !config?.privateKey) {
       throw new Error(
         'GitHub App configuration requires appId and privateKey'
       );
@@ -94,7 +87,7 @@ export class GitHubAppService {
   /**
    * Returns an Octokit instance authenticated as the GitHub App itself.
    */
-  getAppOctokit(): Octokit {
+  getAppOctokit() {
     return new Octokit({
       authStrategy: createAppAuth,
       auth: {
@@ -108,7 +101,7 @@ export class GitHubAppService {
    * Returns an Octokit instance authenticated for a specific installation.
    * Octokit automatically handles generating and caching short-lived installation access tokens.
    */
-  getInstallationOctokit(installationId: number): Octokit {
+  getInstallationOctokit(installationId) {
     return new Octokit({
       authStrategy: createAppAuth,
       auth: {
@@ -122,7 +115,7 @@ export class GitHubAppService {
   /**
    * Lists all installations for the GitHub App.
    */
-  async listInstallations(): Promise<GitHubInstallationSummary[]> {
+  async listInstallations() {
     const octokit = this.getAppOctokit();
     const response = await octokit.rest.apps.listInstallations({
       per_page: 100,
@@ -131,12 +124,12 @@ export class GitHubAppService {
     return response.data.map((inst) => ({
       id: inst.id,
       account: {
-        login: (inst.account as any)?.login || '',
-        id: (inst.account as any)?.id || 0,
-        type: (inst.account as any)?.type || 'User',
-        avatarUrl: (inst.account as any)?.avatar_url,
+        login: inst.account?.login || '',
+        id: inst.account?.id || 0,
+        type: inst.account?.type || 'User',
+        avatarUrl: inst.account?.avatar_url,
       },
-      repositorySelection: inst.repository_selection as 'all' | 'selected',
+      repositorySelection: inst.repository_selection,
       htmlUrl: inst.html_url,
     }));
   }
@@ -144,9 +137,7 @@ export class GitHubAppService {
   /**
    * Lists repositories accessible by a specific installation ID.
    */
-  async listInstallationRepositories(
-    installationId: number
-  ): Promise<GitHubRepositoryDetails[]> {
+  async listInstallationRepositories(installationId) {
     const octokit = this.getInstallationOctokit(installationId);
     const response =
       await octokit.rest.apps.listReposAccessibleToInstallation({
@@ -170,11 +161,7 @@ export class GitHubAppService {
   /**
    * Retrieves single repository metadata for an authorized installation.
    */
-  async getRepository(
-    installationId: number,
-    owner: string,
-    repo: string
-  ): Promise<GitHubRepositoryDetails> {
+  async getRepository(installationId, owner, repo) {
     const octokit = this.getInstallationOctokit(installationId);
     const response = await octokit.rest.repos.get({
       owner,
@@ -198,10 +185,9 @@ export class GitHubAppService {
   /**
    * Generates the GitHub App installation URL for users to install the App.
    */
-  getInstallationUrl(state?: string): string {
+  getInstallationUrl(state) {
     const slug = this.config.appSlug || 'devpilot-ai';
     const base = `https://github.com/apps/${slug}/installations/new`;
     return state ? `${base}?state=${encodeURIComponent(state)}` : base;
   }
 }
-

@@ -1,36 +1,18 @@
 import path from 'node:path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
-import {
-  codebaseAnalysisOutputSchema,
-  type CodebaseAnalysisOutput,
-  type PrioritizedTaskInput,
-} from '@devpilot/shared';
-import type { CodebaseAnalysisResult } from './analyzer.js';
-
-export interface AnalysisPromptContext {
-  repositoryName: string;
-  defaultBranch?: string;
-  analysis: CodebaseAnalysisResult;
-}
-
-export interface IIntelligenceProvider {
-  readonly name: string;
-  analyze(context: AnalysisPromptContext): Promise<CodebaseAnalysisOutput>;
-}
+import { codebaseAnalysisOutputSchema } from '@devpilot/shared';
 
 /**
  * Gemini-based Codebase Intelligence Provider
  */
-export class GeminiIntelligenceProvider implements IIntelligenceProvider {
-  readonly name = 'Google Gemini';
-  private genAI: GoogleGenerativeAI;
-
-  constructor(apiKey: string) {
+export class GeminiIntelligenceProvider {
+  constructor(apiKey) {
+    this.name = 'Google Gemini';
     this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
-  async analyze(context: AnalysisPromptContext): Promise<CodebaseAnalysisOutput> {
+  async analyze(context) {
     const model = this.genAI.getGenerativeModel({
       model: 'gemini-1.5-flash',
       generationConfig: {
@@ -51,15 +33,13 @@ export class GeminiIntelligenceProvider implements IIntelligenceProvider {
 /**
  * OpenAI-based Codebase Intelligence Provider
  */
-export class OpenAIIntelligenceProvider implements IIntelligenceProvider {
-  readonly name = 'OpenAI';
-  private openai: OpenAI;
-
-  constructor(apiKey: string) {
+export class OpenAIIntelligenceProvider {
+  constructor(apiKey) {
+    this.name = 'OpenAI';
     this.openai = new OpenAI({ apiKey });
   }
 
-  async analyze(context: AnalysisPromptContext): Promise<CodebaseAnalysisOutput> {
+  async analyze(context) {
     const prompt = buildAnalysisPrompt(context);
     const response = await this.openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -89,19 +69,21 @@ export class OpenAIIntelligenceProvider implements IIntelligenceProvider {
  * Used as reliable fallback when API keys are not supplied.
  * Performs real rule-based static analysis to produce verified, evidence-backed engineering tasks.
  */
-export class HeuristicStaticProvider implements IIntelligenceProvider {
-  readonly name = 'Deterministic Static Analyzer';
+export class HeuristicStaticProvider {
+  constructor() {
+    this.name = 'Deterministic Static Analyzer';
+  }
 
-  async analyze(context: AnalysisPromptContext): Promise<CodebaseAnalysisOutput> {
+  async analyze(context) {
     const { analysis, repositoryName } = context;
     const { summary, files, testFiles, routeFiles } = analysis;
 
-    const tasks: PrioritizedTaskInput[] = [];
+    const tasks = [];
 
     // 1. Test Coverage Gap Detection
     const untestedFiles = files.filter((f) => {
       const isSourceCode =
-        f.extension === '.ts' || f.extension === '.tsx' || f.extension === '.js' || f.extension === '.py';
+        f.extension === '.ts' || f.extension === '.tsx' || f.extension === '.js' || f.extension === '.jsx' || f.extension === '.py';
       const isTest = f.relativePath.includes('.test.') || f.relativePath.includes('.spec.');
       const isConfig = f.relativePath.includes('.config.') || f.relativePath.endsWith('.d.ts');
       return isSourceCode && !isTest && !isConfig;
@@ -184,7 +166,7 @@ export class HeuristicStaticProvider implements IIntelligenceProvider {
     const primaryLangs = Object.keys(summary.languages);
     const summaryText = `Architecture analysis completed for ${repositoryName}. Identified ${summary.totalFiles} files across ${primaryLangs.join(', ') || 'multiple languages'} using ${summary.frameworks.join(', ') || 'standard libraries'}. Formulated ${tasks.length} grounded development improvement tasks.`;
 
-    const result: CodebaseAnalysisOutput = {
+    const result = {
       summary: summaryText,
       architecture: {
         overview: `Project type: ${summary.projectType}. Managed by ${summary.packageManager || 'standard package manager'}.`,
@@ -199,16 +181,11 @@ export class HeuristicStaticProvider implements IIntelligenceProvider {
   }
 }
 
-export interface IntelligenceFactoryOptions {
-  geminiApiKey?: string;
-  openaiApiKey?: string;
-}
-
 /**
  * Factory creating the best available Intelligence Engine Provider.
  */
 export class IntelligenceEngineFactory {
-  static getProvider(options?: IntelligenceFactoryOptions): IIntelligenceProvider {
+  static getProvider(options) {
     const geminiKey = options?.geminiApiKey ?? process.env.GEMINI_API_KEY;
     if (geminiKey && geminiKey.trim().length > 0) {
       return new GeminiIntelligenceProvider(geminiKey.trim());
@@ -224,7 +201,7 @@ export class IntelligenceEngineFactory {
   }
 }
 
-function buildAnalysisPrompt(context: AnalysisPromptContext): string {
+function buildAnalysisPrompt(context) {
   const { repositoryName, defaultBranch = 'main', analysis } = context;
   const { summary, files, dependencies, devDependencies, testFiles, readmeExcerpt } = analysis;
 

@@ -1,11 +1,8 @@
 import { Octokit } from '@octokit/rest';
-import type { GitHubOAuthConfig, GitHubUserIdentity } from './types.js';
 
 export class GitHubOAuthService {
-  private config: GitHubOAuthConfig;
-
-  constructor(config: GitHubOAuthConfig) {
-    if (!config.clientId || !config.clientSecret) {
+  constructor(config) {
+    if (!config?.clientId || !config?.clientSecret) {
       throw new Error(
         'GitHub OAuth configuration requires clientId and clientSecret'
       );
@@ -16,7 +13,7 @@ export class GitHubOAuthService {
   /**
    * Generates the GitHub OAuth authorization URL for user login.
    */
-  getAuthorizationUrl(state: string, scope = 'read:user user:email'): string {
+  getAuthorizationUrl(state, scope = 'read:user user:email') {
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri || '',
@@ -29,7 +26,7 @@ export class GitHubOAuthService {
   /**
    * Exchanges the temporary OAuth code for an access token.
    */
-  async exchangeCodeForToken(code: string): Promise<string> {
+  async exchangeCodeForToken(code) {
     const response = await fetch(
       'https://github.com/login/oauth/access_token',
       {
@@ -53,11 +50,7 @@ export class GitHubOAuthService {
       );
     }
 
-    const data = (await response.json()) as {
-      access_token?: string;
-      error?: string;
-      error_description?: string;
-    };
+    const data = await response.json();
 
     if (data.error || !data.access_token) {
       throw new Error(
@@ -71,7 +64,7 @@ export class GitHubOAuthService {
   /**
    * Fetches user profile and verified primary email using the user access token.
    */
-  async getAuthenticatedUser(accessToken: string): Promise<GitHubUserIdentity> {
+  async getAuthenticatedUser(accessToken) {
     const octokit = new Octokit({ auth: accessToken });
 
     const { data: user } = await octokit.rest.users.getAuthenticated();
@@ -103,4 +96,3 @@ export class GitHubOAuthService {
     };
   }
 }
-
