@@ -13,15 +13,14 @@ import {
   Clock,
   Layers,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
+import { Header } from '../components/Header.jsx';
 import { api } from '../services/api.js';
-import type { DashboardStatsDto } from '@devpilot/shared';
 
-export const DashboardPage: React.FC = () => {
+export const DashboardPage = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState<DashboardStatsDto | null>(null);
+  const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const fetchStats = async () => {
     try {
@@ -268,4 +267,3 @@ export const DashboardPage: React.FC = () => {
     </div>
   );
 };
-

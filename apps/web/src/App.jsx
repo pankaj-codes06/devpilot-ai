@@ -1,18 +1,18 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth.js';
-import { DashboardLayout } from './layouts/DashboardLayout.js';
-import { LoginPage } from './pages/LoginPage.js';
-import { DashboardPage } from './pages/DashboardPage.js';
-import { RepositoriesPage } from './pages/RepositoriesPage.js';
-import { AgentSettingsPage } from './pages/AgentSettingsPage.js';
-import { TeamSettingsPage } from './pages/TeamSettingsPage.js';
-import { ActivityPage } from './pages/ActivityPage.js';
-import { RepositoryIntelligencePage } from './pages/RepositoryIntelligencePage.js';
-import { ProjectsPage } from './pages/ProjectsPage.js';
-import { ProjectIntelligencePage } from './pages/ProjectIntelligencePage.js';
+import { AuthProvider } from './hooks/useAuth.jsx';
+import { DashboardLayout } from './layouts/DashboardLayout.jsx';
+import { LoginPage } from './pages/LoginPage.jsx';
+import { DashboardPage } from './pages/DashboardPage.jsx';
+import { RepositoriesPage } from './pages/RepositoriesPage.jsx';
+import { AgentSettingsPage } from './pages/AgentSettingsPage.jsx';
+import { TeamSettingsPage } from './pages/TeamSettingsPage.jsx';
+import { ActivityPage } from './pages/ActivityPage.jsx';
+import { RepositoryIntelligencePage } from './pages/RepositoryIntelligencePage.jsx';
+import { ProjectsPage } from './pages/ProjectsPage.jsx';
+import { ProjectIntelligencePage } from './pages/ProjectIntelligencePage.jsx';
 
-export const App: React.FC = () => {
+export const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
@@ -39,4 +39,3 @@ export const App: React.FC = () => {
 };
 
 export default App;
-

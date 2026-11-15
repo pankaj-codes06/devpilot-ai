@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { Sidebar } from '../components/Sidebar.js';
-import { useAuth } from '../hooks/useAuth.js';
+import { Sidebar } from '../components/Sidebar.jsx';
+import { useAuth } from '../hooks/useAuth.jsx';
 
-export const DashboardLayout: React.FC = () => {
+export const DashboardLayout = () => {
   const { user, isLoading } = useAuth();
 
   if (isLoading) {
@@ -30,4 +30,3 @@ export const DashboardLayout: React.FC = () => {
     </div>
   );
 };
-

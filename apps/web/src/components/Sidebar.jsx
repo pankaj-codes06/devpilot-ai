@@ -10,15 +10,9 @@ import {
   ShieldCheck,
   FolderArchive,
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../hooks/useAuth.jsx';
 
-interface NavItem {
-  name: string;
-  to: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-const navItems: NavItem[] = [
+const navItems = [
   { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
   { name: 'Hybrid Projects', to: '/projects', icon: FolderArchive },
   { name: 'Repositories', to: '/repositories', icon: GitFork },
@@ -27,7 +21,7 @@ const navItems: NavItem[] = [
   { name: 'Activity Log', to: '/activity', icon: Activity },
 ];
 
-export const Sidebar: React.FC = () => {
+export const Sidebar = () => {
   const { user, currentOrg, logout } = useAuth();
 
   return (
@@ -140,4 +134,3 @@ export const Sidebar: React.FC = () => {
     </aside>
   );
 };
-

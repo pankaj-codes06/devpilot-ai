@@ -8,12 +8,12 @@ import {
   ArrowRight,
   AlertCircle,
 } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth.js';
+import { useAuth } from '../hooks/useAuth.jsx';
 
-export const LoginPage: React.FC = () => {
+export const LoginPage = () => {
   const { user, isLoading } = useAuth();
   const [isRedirecting, setIsRedirecting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   if (isLoading) {
     return (
@@ -160,9 +160,8 @@ export const LoginPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 px-8 py-5 text-center text-xs text-slate-500">
-        DevPilot AI &copy; {new Date().getFullYear()} &bull; Autonomous GitHub Developer Agent Platform &bull; Built with React, Vite, Node, TypeScript & PostgreSQL
+        DevPilot AI &copy; {new Date().getFullYear()} &bull; Autonomous GitHub Developer Agent Platform &bull; Built with React, Vite, Node, JavaScript & PostgreSQL
       </footer>
     </div>
   );
 };
-

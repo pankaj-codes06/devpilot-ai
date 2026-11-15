@@ -1,37 +1,16 @@
-import type {
-  ApiResponse,
-  AuthSessionUser,
-  OrganizationDto,
-  RepositoryDto,
-  GitHubInstallableRepo,
-  DashboardStatsDto,
-  UpdateAgentSettingsInput,
-  RepositoryAnalysisOverviewDto,
-  AgentRunDetailsDto,
-  TaskPlanDto,
-  ProjectDto,
-  TeamDto,
-  ProjectModuleDto,
-  DevelopmentTaskDto,
-  CreateTeamInput,
-  MapModuleInput,
-} from '@devpilot/shared';
-
 const API_BASE = '/api';
 
-class ApiError extends Error {
-  constructor(
-    public code: string,
-    message: string,
-    public statusCode: number,
-    public details?: unknown
-  ) {
+export class ApiError extends Error {
+  constructor(code, message, statusCode, details) {
     super(message);
     this.name = 'ApiError';
+    this.code = code;
+    this.statusCode = statusCode;
+    this.details = details;
   }
 }
 
-async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function request(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
 
   const response = await fetch(url, {
@@ -44,7 +23,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     },
   });
 
-  const data: ApiResponse<T> = await response.json().catch(() => ({
+  const data = await response.json().catch(() => ({
     success: false,
     error: {
       code: 'NETWORK_ERROR',
@@ -61,41 +40,38 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     );
   }
 
-  return data.data as T;
+  return data.data;
 }
 
 export const api = {
   // Auth
   auth: {
-    async getMe(): Promise<{ user: AuthSessionUser; organizations: OrganizationDto[] }> {
+    async getMe() {
       return request('/auth/me');
     },
-    async logout(): Promise<{ message: string }> {
+    async logout() {
       return request('/auth/logout', { method: 'POST' });
     },
-    async getLoginUrl(): Promise<{ authorizeUrl: string }> {
+    async getLoginUrl() {
       return request('/auth/github');
     },
   },
 
   // GitHub integration
   github: {
-    async getInstallUrl(): Promise<{ installUrl: string }> {
+    async getInstallUrl() {
       return request('/github/install');
     },
-    async getInstallableRepositories(): Promise<GitHubInstallableRepo[]> {
+    async getInstallableRepositories() {
       return request('/github/repositories');
     },
-    async connectRepository(
-      githubRepoId: number,
-      installationId: number
-    ): Promise<RepositoryDto> {
+    async connectRepository(githubRepoId, installationId) {
       return request('/github/repositories/sync', {
         method: 'POST',
         body: JSON.stringify({ githubRepoId, installationId }),
       });
     },
-    async disconnectRepository(id: string): Promise<{ message: string }> {
+    async disconnectRepository(id) {
       return request(`/github/repositories/${id}`, {
         method: 'DELETE',
       });
@@ -104,51 +80,44 @@ export const api = {
 
   // Connected Repositories
   repositories: {
-    async list(): Promise<RepositoryDto[]> {
+    async list() {
       return request('/repositories');
     },
-    async getById(id: string): Promise<RepositoryDto> {
+    async getById(id) {
       return request(`/repositories/${id}`);
     },
-    async updateSettings(
-      id: string,
-      settings: UpdateAgentSettingsInput
-    ): Promise<RepositoryDto['agentSettings']> {
+    async updateSettings(id, settings) {
       return request(`/repositories/${id}/settings`, {
         method: 'PATCH',
         body: JSON.stringify(settings),
       });
     },
-    async getDashboardStats(): Promise<DashboardStatsDto> {
+    async getDashboardStats() {
       return request('/repositories/dashboard/stats');
     },
   },
 
   // Repository Intelligence & Analysis
   analysis: {
-    async triggerAnalysis(
-      repositoryId: string
-    ): Promise<{ runId: string; status: string; repositoryName: string }> {
+    async triggerAnalysis(repositoryId) {
       return request(`/repositories/${repositoryId}/analyze`, {
         method: 'POST',
       });
     },
-    async getOverview(
-      repositoryId: string
-    ): Promise<RepositoryAnalysisOverviewDto> {
+    async getOverview(repositoryId) {
       return request(`/repositories/${repositoryId}/analysis`);
     },
-    async getTasks(repositoryId: string): Promise<TaskPlanDto[]> {
+    async getTasks(repositoryId) {
       return request(`/repositories/${repositoryId}/tasks`);
     },
-    async getRunDetails(runId: string): Promise<AgentRunDetailsDto> {
+    async getRunDetails(runId) {
       return request(`/agent-runs/${runId}`);
     },
   },
 
   // System Health
   system: {
-    async checkHealth(): Promise<{ status: string; database: string; uptime: number }> {
+    async checkHealth() {
       const res = await fetch('/health');
       const data = await res.json();
       return data.data;
@@ -157,13 +126,13 @@ export const api = {
 
   // Hybrid ZIP Projects & Intelligence
   projects: {
-    async list(): Promise<ProjectDto[]> {
+    async list() {
       return request('/projects');
     },
-    async getById(id: string): Promise<ProjectDto> {
+    async getById(id) {
       return request(`/projects/${id}`);
     },
-    async uploadZip(formData: FormData): Promise<ProjectDto> {
+    async uploadZip(formData) {
       const response = await fetch('/api/projects/upload', {
         method: 'POST',
         credentials: 'include',
@@ -175,34 +144,33 @@ export const api = {
       }
       return data.data;
     },
-    async analyze(projectId: string): Promise<any> {
+    async analyze(projectId) {
       return request(`/projects/${projectId}/analyze`, { method: 'POST' });
     },
-    async getAnalysis(projectId: string): Promise<any> {
+    async getAnalysis(projectId) {
       return request(`/projects/${projectId}/analysis`);
     },
-    async getTasks(projectId: string, params?: Record<string, string>): Promise<DevelopmentTaskDto[]> {
+    async getTasks(projectId, params) {
       const query = params ? '?' + new URLSearchParams(params).toString() : '';
       return request(`/projects/${projectId}/tasks${query}`);
     },
-    async listTeams(projectId: string): Promise<TeamDto[]> {
+    async listTeams(projectId) {
       return request(`/projects/${projectId}/teams`);
     },
-    async createTeam(projectId: string, data: CreateTeamInput): Promise<TeamDto> {
+    async createTeam(projectId, data) {
       return request(`/projects/${projectId}/teams`, { method: 'POST', body: JSON.stringify(data) });
     },
-    async listModules(projectId: string): Promise<ProjectModuleDto[]> {
+    async listModules(projectId) {
       return request(`/projects/${projectId}/modules`);
     },
-    async createModule(projectId: string, data: MapModuleInput): Promise<ProjectModuleDto> {
+    async createModule(projectId, data) {
       return request(`/projects/${projectId}/modules`, { method: 'POST', body: JSON.stringify(data) });
     },
-    async suggestTeamsAndModules(projectId: string): Promise<{ teams: TeamDto[]; modules: ProjectModuleDto[] }> {
+    async suggestTeamsAndModules(projectId) {
       return request(`/projects/${projectId}/modules/suggest`, { method: 'POST' });
     },
-    async delete(projectId: string): Promise<{ deleted: boolean }> {
+    async delete(projectId) {
       return request(`/projects/${projectId}`, { method: 'DELETE' });
     },
   },
 };
-

@@ -7,22 +7,21 @@ import {
   Trash2,
   RefreshCw,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
+import { Header } from '../components/Header.jsx';
 import { api } from '../services/api.js';
-import type { ProjectDto } from '@devpilot/shared';
 
-export const ProjectsPage: React.FC = () => {
-  const [projects, setProjects] = useState<ProjectDto[]>([]);
+export const ProjectsPage = () => {
+  const [projects, setProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   // Upload modal state
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [projectName, setProjectName] = useState('');
   const [projectDescription, setProjectDescription] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState(null);
 
   const fetchProjects = async () => {
     try {
@@ -41,7 +40,7 @@ export const ProjectsPage: React.FC = () => {
     fetchProjects();
   }, []);
 
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUpload = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
       setUploadError('Please select a project ZIP archive');
@@ -74,7 +73,7 @@ export const ProjectsPage: React.FC = () => {
     }
   };
 
-  const handleDeleteProject = async (projectId: string, name: string) => {
+  const handleDeleteProject = async (projectId, name) => {
     if (!window.confirm(`Are you sure you want to delete project "${name}"? All extracted workspaces, teams, and generated tasks will be permanently removed.`)) {
       return;
     }

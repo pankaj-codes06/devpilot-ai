@@ -3,15 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import { api } from '../services/api.js';
 
-interface HeaderProps {
-  title: string;
-  description?: string;
-  actions?: React.ReactNode;
-}
-
-export const Header: React.FC<HeaderProps> = ({ title, description, actions }) => {
+export const Header = ({ title, description, actions }) => {
   const navigate = useNavigate();
-  const [healthStatus, setHealthStatus] = useState<'healthy' | 'checking' | 'error'>('checking');
+  const [healthStatus, setHealthStatus] = useState('checking');
 
   useEffect(() => {
     let isMounted = true;
@@ -83,4 +77,3 @@ export const Header: React.FC<HeaderProps> = ({ title, description, actions }) =
     </header>
   );
 };
-

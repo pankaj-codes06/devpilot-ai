@@ -1,24 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { AuthSessionUser, OrganizationDto } from '@devpilot/shared';
 import { api } from '../services/api.js';
 
-interface AuthContextType {
-  user: AuthSessionUser | null;
-  organizations: OrganizationDto[];
-  currentOrg: OrganizationDto | null;
-  isLoading: boolean;
-  error: string | null;
-  refreshUser: () => Promise<void>;
-  logout: () => Promise<void>;
-}
+const AuthContext = createContext(undefined);
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<AuthSessionUser | null>(null);
-  const [organizations, setOrganizations] = useState<OrganizationDto[]>([]);
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [organizations, setOrganizations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(null);
 
   const fetchUser = async () => {
     try {
@@ -73,11 +62,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export function useAuth(): AuthContextType {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
-

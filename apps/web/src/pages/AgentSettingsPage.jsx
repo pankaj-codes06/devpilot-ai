@@ -9,34 +9,30 @@ import {
   AlertCircle,
   Calendar,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
+import { Header } from '../components/Header.jsx';
 import { api } from '../services/api.js';
 import {
   DEFAULT_TIMEZONE,
   SUPPORTED_TIMEZONES,
   DEFAULT_SCHEDULE_CRON,
   DEFAULT_BRANCH_PREFIX,
-  type RepositoryDto,
-  type UpdateAgentSettingsInput,
 } from '@devpilot/shared';
 
-export const AgentSettingsPage: React.FC = () => {
+export const AgentSettingsPage = () => {
   const [searchParams] = useSearchParams();
-  const [repositories, setRepositories] = useState<RepositoryDto[]>([]);
-  const [selectedRepoId, setSelectedRepoId] = useState<string>('');
+  const [repositories, setRepositories] = useState([]);
+  const [selectedRepoId, setSelectedRepoId] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null
-  );
+  const [feedback, setFeedback] = useState(null);
 
   // Form state
   const [isEnabled, setIsEnabled] = useState(false);
   const [scheduleCron, setScheduleCron] = useState(DEFAULT_SCHEDULE_CRON);
-  const [timezone, setTimezone] = useState<string>(DEFAULT_TIMEZONE);
+  const [timezone, setTimezone] = useState(DEFAULT_TIMEZONE);
   const [branchPrefix, setBranchPrefix] = useState(DEFAULT_BRANCH_PREFIX);
-  const [allowedPaths, setAllowedPaths] = useState<string>('');
-  const [excludedPaths, setExcludedPaths] = useState<string>('.github/**, docker/**, .env*');
+  const [allowedPaths, setAllowedPaths] = useState('');
+  const [excludedPaths, setExcludedPaths] = useState('.github/**, docker/**, .env*');
   const [maxDailyRuns, setMaxDailyRuns] = useState(3);
   const [requirePrReview, setRequirePrReview] = useState(true);
 
@@ -79,7 +75,7 @@ export const AgentSettingsPage: React.FC = () => {
     }
   }, [selectedRepoId, repositories]);
 
-  const handleSave = async (e: React.FormEvent) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!selectedRepoId) return;
 
@@ -87,10 +83,10 @@ export const AgentSettingsPage: React.FC = () => {
       setIsSaving(true);
       setFeedback(null);
 
-      const payload: UpdateAgentSettingsInput = {
+      const payload = {
         isEnabled,
         scheduleCron,
-        timezone: timezone as any,
+        timezone,
         branchPrefix,
         allowedPaths: allowedPaths
           .split(',')
@@ -118,7 +114,7 @@ export const AgentSettingsPage: React.FC = () => {
             ? {
                 ...r,
                 agentSettings: {
-                  ...r.agentSettings!,
+                  ...r.agentSettings,
                   ...payload,
                   allowedPaths: payload.allowedPaths || [],
                   excludedPaths: payload.excludedPaths || [],
@@ -376,4 +372,3 @@ export const AgentSettingsPage: React.FC = () => {
     </div>
   );
 };
-

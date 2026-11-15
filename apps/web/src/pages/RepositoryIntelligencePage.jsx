@@ -17,29 +17,21 @@ import {
   Tag,
   Wrench,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
+import { Header } from '../components/Header.jsx';
 import { api } from '../services/api.js';
-import type {
-  RepositoryAnalysisOverviewDto,
-  TaskPlanDto,
-  TaskPriority,
-  RepositoryDto,
-} from '@devpilot/shared';
 
-export const RepositoryIntelligencePage: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const [repo, setRepo] = useState<RepositoryDto | null>(null);
-  const [overview, setOverview] = useState<RepositoryAnalysisOverviewDto | null>(null);
-  const [tasks, setTasks] = useState<TaskPlanDto[]>([]);
+export const RepositoryIntelligencePage = () => {
+  const { id } = useParams();
+  const [repo, setRepo] = useState(null);
+  const [overview, setOverview] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTriggering, setIsTriggering] = useState(false);
-  const [selectedPriority, setSelectedPriority] = useState<string>('ALL');
-  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
-    null
-  );
+  const [selectedPriority, setSelectedPriority] = useState('ALL');
+  const [expandedTaskId, setExpandedTaskId] = useState(null);
+  const [feedback, setFeedback] = useState(null);
 
-  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const pollIntervalRef = useRef(null);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -54,7 +46,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
       setTasks(tasksData);
 
       // Check if active run is in progress; if so, schedule polling
-      const latestStatus = overviewData.latestRun?.status;
+      const latestStatus = overviewData?.latestRun?.status;
       if (latestStatus === 'QUEUED' || latestStatus === 'RUNNING') {
         if (!pollIntervalRef.current) {
           pollIntervalRef.current = setInterval(() => {
@@ -115,7 +107,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
     return t.priority === selectedPriority;
   });
 
-  const getPriorityColor = (priority: TaskPriority) => {
+  const getPriorityColor = (priority) => {
     switch (priority) {
       case 'CRITICAL':
         return 'text-red-400 bg-red-950/60 border-red-800/80';
@@ -124,6 +116,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
       case 'MEDIUM':
         return 'text-blue-400 bg-blue-950/60 border-blue-800/80';
       case 'LOW':
+      default:
         return 'text-slate-400 bg-slate-800 border-slate-700';
     }
   };
@@ -262,7 +255,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
                   Language Distribution
                 </span>
                 <div className="flex flex-wrap gap-2">
-                  {Object.entries(overview.architecture.languages).map(([lang, pct]) => (
+                  {Object.entries(overview.architecture.languages || {}).map(([lang, pct]) => (
                     <span
                       key={lang}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/80 text-xs font-mono text-slate-200"
@@ -282,7 +275,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
                     Detected Frameworks
                   </span>
                   <div className="flex flex-wrap gap-1.5">
-                    {overview.architecture.frameworks.map((fw) => (
+                    {overview.architecture.frameworks?.map((fw) => (
                       <span
                         key={fw}
                         className="px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 text-[11px] font-medium"
@@ -298,7 +291,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
                     Testing & Tooling
                   </span>
                   <div className="flex flex-wrap gap-1.5 text-[11px]">
-                    {overview.architecture.testFrameworks.map((tf) => (
+                    {overview.architecture.testFrameworks?.map((tf) => (
                       <span
                         key={tf}
                         className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium"
@@ -336,12 +329,12 @@ export const RepositoryIntelligencePage: React.FC = () => {
                   <h3 className="text-sm font-semibold text-white">Team Modules</h3>
                 </div>
                 <span className="text-xs text-slate-400">
-                  {overview.architecture.modules.length} Segments
+                  {overview.architecture.modules?.length || 0} Segments
                 </span>
               </div>
 
               <div className="space-y-2.5 overflow-y-auto max-h-72 pr-1">
-                {overview.architecture.modules.map((mod) => (
+                {overview.architecture.modules?.map((mod) => (
                   <div
                     key={mod.name}
                     className="p-3 rounded-lg bg-slate-800/40 border border-slate-800 text-xs space-y-1"
@@ -407,7 +400,7 @@ export const RepositoryIntelligencePage: React.FC = () => {
 
               {/* Priority Filter Tabs */}
               <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800 text-xs font-medium">
-                {(['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const).map((p) => (
+                {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map((p) => (
                   <button
                     key={p}
                     onClick={() => setSelectedPriority(p)}
@@ -418,9 +411,9 @@ export const RepositoryIntelligencePage: React.FC = () => {
                     }`}
                   >
                     {p}
-                    {p !== 'ALL' && overview?.tasksByPriority?.[p as TaskPriority] ? (
+                    {p !== 'ALL' && overview?.tasksByPriority?.[p] ? (
                       <span className="ml-1.5 opacity-70">
-                        ({overview.tasksByPriority[p as TaskPriority]})
+                        ({overview.tasksByPriority[p]})
                       </span>
                     ) : null}
                   </button>

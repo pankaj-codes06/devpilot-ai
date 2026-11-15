@@ -15,14 +15,13 @@ import {
   Search,
   Brain,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
+import { Header } from '../components/Header.jsx';
 import { api } from '../services/api.js';
-import type { RepositoryDto, GitHubInstallableRepo } from '@devpilot/shared';
 
-export const RepositoriesPage: React.FC = () => {
+export const RepositoriesPage = () => {
   const [searchParams] = useSearchParams();
-  const [connectedRepos, setConnectedRepos] = useState<RepositoryDto[]>([]);
-  const [installableRepos, setInstallableRepos] = useState<GitHubInstallableRepo[]>([]);
+  const [connectedRepos, setConnectedRepos] = useState([]);
+  const [installableRepos, setInstallableRepos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAvailable, setIsLoadingAvailable] = useState(false);
   const isInstallRedirect =
@@ -33,8 +32,8 @@ export const RepositoriesPage: React.FC = () => {
 
   const [showConnectModal, setShowConnectModal] = useState(isInstallRedirect);
   const [searchTerm, setSearchTerm] = useState('');
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [processingRepoId, setProcessingRepoId] = useState<number | string | null>(null);
+  const [actionError, setActionError] = useState(null);
+  const [processingRepoId, setProcessingRepoId] = useState(null);
 
   const fetchConnectedRepos = async () => {
     try {
@@ -75,7 +74,7 @@ export const RepositoriesPage: React.FC = () => {
     fetchAvailableRepos();
   };
 
-  const handleConnectRepo = async (githubRepoId: number, installationId: number) => {
+  const handleConnectRepo = async (githubRepoId, installationId) => {
     try {
       setProcessingRepoId(githubRepoId);
       setActionError(null);
@@ -88,7 +87,7 @@ export const RepositoriesPage: React.FC = () => {
     }
   };
 
-  const handleDisconnectRepo = async (repositoryId: string, repoName: string) => {
+  const handleDisconnectRepo = async (repositoryId, repoName) => {
     if (
       !window.confirm(
         `Are you sure you want to disconnect ${repoName}? Autonomous runs for this repository will be halted.`
@@ -424,4 +423,3 @@ export const RepositoriesPage: React.FC = () => {
     </div>
   );
 };
-

@@ -7,12 +7,11 @@ import {
   GitPullRequest,
   Clock,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
+import { Header } from '../components/Header.jsx';
 import { api } from '../services/api.js';
-import type { DashboardStatsDto } from '@devpilot/shared';
 
-export const ActivityPage: React.FC = () => {
-  const [stats, setStats] = useState<DashboardStatsDto | null>(null);
+export const ActivityPage = () => {
+  const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -129,4 +128,3 @@ export const ActivityPage: React.FC = () => {
     </div>
   );
 };
-

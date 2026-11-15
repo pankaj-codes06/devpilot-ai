@@ -7,10 +7,10 @@ import {
   Crown,
   Lock,
 } from 'lucide-react';
-import { Header } from '../components/Header.js';
-import { useAuth } from '../hooks/useAuth.js';
+import { Header } from '../components/Header.jsx';
+import { useAuth } from '../hooks/useAuth.jsx';
 
-export const TeamSettingsPage: React.FC = () => {
+export const TeamSettingsPage = () => {
   const { user, currentOrg } = useAuth();
 
   return (
@@ -143,4 +143,3 @@ export const TeamSettingsPage: React.FC = () => {
     </div>
   );
 };
-
