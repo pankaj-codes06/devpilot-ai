@@ -6,9 +6,10 @@ import { api } from '../services/api.js';
 interface HeaderProps {
   title: string;
   description?: string;
+  actions?: React.ReactNode;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, description }) => {
+export const Header: React.FC<HeaderProps> = ({ title, description, actions }) => {
   const navigate = useNavigate();
   const [healthStatus, setHealthStatus] = useState<'healthy' | 'checking' | 'error'>('checking');
 
@@ -66,14 +67,18 @@ export const Header: React.FC<HeaderProps> = ({ title, description }) => {
           )}
         </div>
 
-        {/* Quick Connect Repo Button */}
-        <button
-          onClick={() => navigate('/repositories?action=connect')}
-          className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition shadow-blue-600/20"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Connect Repository</span>
-        </button>
+        {/* Actions or Quick Connect Repo Button */}
+        {actions ? (
+          actions
+        ) : (
+          <button
+            onClick={() => navigate('/repositories?action=connect')}
+            className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition shadow-blue-600/20"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Connect Repository</span>
+          </button>
+        )}
       </div>
     </header>
   );

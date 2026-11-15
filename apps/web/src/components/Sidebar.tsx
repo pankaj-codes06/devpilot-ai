@@ -8,6 +8,7 @@ import {
   Users,
   LogOut,
   ShieldCheck,
+  FolderArchive,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.js';
 
@@ -19,6 +20,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Dashboard', to: '/dashboard', icon: LayoutDashboard },
+  { name: 'Hybrid Projects', to: '/projects', icon: FolderArchive },
   { name: 'Repositories', to: '/repositories', icon: GitFork },
   { name: 'Agent Settings', to: '/agent-settings', icon: Bot },
   { name: 'Team Settings', to: '/team-settings', icon: Users },

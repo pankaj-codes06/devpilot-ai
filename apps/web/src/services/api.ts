@@ -9,6 +9,12 @@ import type {
   RepositoryAnalysisOverviewDto,
   AgentRunDetailsDto,
   TaskPlanDto,
+  ProjectDto,
+  TeamDto,
+  ProjectModuleDto,
+  DevelopmentTaskDto,
+  CreateTeamInput,
+  MapModuleInput,
 } from '@devpilot/shared';
 
 const API_BASE = '/api';
@@ -146,6 +152,56 @@ export const api = {
       const res = await fetch('/health');
       const data = await res.json();
       return data.data;
+    },
+  },
+
+  // Hybrid ZIP Projects & Intelligence
+  projects: {
+    async list(): Promise<ProjectDto[]> {
+      return request('/projects');
+    },
+    async getById(id: string): Promise<ProjectDto> {
+      return request(`/projects/${id}`);
+    },
+    async uploadZip(formData: FormData): Promise<ProjectDto> {
+      const response = await fetch('/api/projects/upload', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error?.message || 'Failed to upload project ZIP');
+      }
+      return data.data;
+    },
+    async analyze(projectId: string): Promise<any> {
+      return request(`/projects/${projectId}/analyze`, { method: 'POST' });
+    },
+    async getAnalysis(projectId: string): Promise<any> {
+      return request(`/projects/${projectId}/analysis`);
+    },
+    async getTasks(projectId: string, params?: Record<string, string>): Promise<DevelopmentTaskDto[]> {
+      const query = params ? '?' + new URLSearchParams(params).toString() : '';
+      return request(`/projects/${projectId}/tasks${query}`);
+    },
+    async listTeams(projectId: string): Promise<TeamDto[]> {
+      return request(`/projects/${projectId}/teams`);
+    },
+    async createTeam(projectId: string, data: CreateTeamInput): Promise<TeamDto> {
+      return request(`/projects/${projectId}/teams`, { method: 'POST', body: JSON.stringify(data) });
+    },
+    async listModules(projectId: string): Promise<ProjectModuleDto[]> {
+      return request(`/projects/${projectId}/modules`);
+    },
+    async createModule(projectId: string, data: MapModuleInput): Promise<ProjectModuleDto> {
+      return request(`/projects/${projectId}/modules`, { method: 'POST', body: JSON.stringify(data) });
+    },
+    async suggestTeamsAndModules(projectId: string): Promise<{ teams: TeamDto[]; modules: ProjectModuleDto[] }> {
+      return request(`/projects/${projectId}/modules/suggest`, { method: 'POST' });
+    },
+    async delete(projectId: string): Promise<{ deleted: boolean }> {
+      return request(`/projects/${projectId}`, { method: 'DELETE' });
     },
   },
 };
