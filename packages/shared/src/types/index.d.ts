@@ -349,5 +349,3 @@ export interface MapModuleInput {
   description?: string;
   isShared?: boolean;
 }
-
-

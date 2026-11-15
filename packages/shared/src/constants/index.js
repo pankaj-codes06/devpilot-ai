@@ -11,7 +11,7 @@ export const SUPPORTED_TIMEZONES = [
   'Asia/Singapore',
   'Asia/Tokyo',
   'Australia/Sydney',
-] as const;
+];
 
 export const DEFAULT_SCHEDULE_CRON = '0 9 * * 1-5'; // Monday to Friday at 09:00 AM
 export const DEFAULT_BRANCH_PREFIX = 'devpilot/';
@@ -36,5 +36,3 @@ export const ACTIVE_ORG_COOKIE_NAME = 'devpilot_active_org';
 
 export const REPOSITORY_ANALYSIS_QUEUE = 'repository-analysis';
 export const ANALYSIS_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
-
-

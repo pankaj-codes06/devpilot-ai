@@ -1,0 +1,12 @@
+export declare const DEFAULT_TIMEZONE = 'Asia/Kolkata';
+export declare const SUPPORTED_TIMEZONES: readonly string[];
+export declare const DEFAULT_SCHEDULE_CRON = '0 9 * * 1-5';
+export declare const DEFAULT_BRANCH_PREFIX = 'devpilot/';
+export declare const DEFAULT_MAX_DAILY_RUNS = 3;
+export declare const DEFAULT_EXCLUDED_PATHS: readonly string[];
+export declare const AUTH_COOKIE_NAME = 'devpilot_session';
+export declare const OAUTH_STATE_COOKIE_NAME = 'devpilot_oauth_state';
+export declare const INSTALL_STATE_COOKIE_NAME = 'devpilot_install_state';
+export declare const ACTIVE_ORG_COOKIE_NAME = 'devpilot_active_org';
+export declare const REPOSITORY_ANALYSIS_QUEUE = 'repository-analysis';
+export declare const ANALYSIS_TIMEOUT_MS: number;

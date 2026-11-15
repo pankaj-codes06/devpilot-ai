@@ -34,10 +34,6 @@ export const updateRepositorySettingsSchema = z.object({
   agentSettings: updateAgentSettingsSchema.optional(),
 });
 
-export type ConnectRepositoryInput = z.infer<typeof connectRepositorySchema>;
-export type SyncRepositoriesInput = z.infer<typeof syncRepositoriesSchema>;
-export type UpdateAgentSettingsInput = z.infer<typeof updateAgentSettingsSchema>;
-
 export const prioritizedTaskSchema = z.object({
   title: z.string().min(3),
   description: z.string(),
@@ -69,9 +65,6 @@ export const codebaseAnalysisOutputSchema = z.object({
   }),
   tasks: z.array(prioritizedTaskSchema),
 });
-
-export type PrioritizedTaskInput = z.infer<typeof prioritizedTaskSchema>;
-export type CodebaseAnalysisOutput = z.infer<typeof codebaseAnalysisOutputSchema>;
 
 export const createProjectSchema = z.object({
   name: z.string().min(2, 'Project name must be at least 2 characters').max(100),
@@ -116,6 +109,3 @@ export const updateModuleSchema = z.object({
   description: z.string().max(300).optional(),
   isShared: z.boolean().optional(),
 });
-
-
-
